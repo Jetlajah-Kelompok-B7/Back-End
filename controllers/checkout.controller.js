@@ -7,10 +7,30 @@ const prisma = new PrismaClient();
  * @param {import("express").NextFunction} next
  */
 const createCheckout = async (req, res, next) => {
-    let { metode_pembayaran, total } = req.body;
+    const { metode_pembayaran } = req.body;
     const orderParams = Number(req.params.id);
 
     try {
+        if (!orderParams || !metode_pembayaran) {
+            return res.status(400).json({
+                status: 400,
+                message: "Bad Request"
+            });
+        }
+
+        const exists = await prisma.checkout.findUnique({
+            where: {
+                orderId: orderParams
+            }
+        });
+
+        if (exists) {
+            return res.status(400).json({
+                status: 400,
+                message: "Bad Request"
+            });
+        }
+
         const order = await prisma.order.findMany({
             include: {
                 ticket: {
@@ -20,7 +40,7 @@ const createCheckout = async (req, res, next) => {
                 }
             },
             where: {
-                ticketId: orderParams
+                id: orderParams
             }
         });
 
@@ -34,7 +54,7 @@ const createCheckout = async (req, res, next) => {
             }
         });
 
-        res.status(201).json({
+        return res.status(201).json({
             status: true,
             message: "Checkout and History Transaction created successfully",
             data: newCheckout
@@ -51,14 +71,14 @@ const createCheckout = async (req, res, next) => {
  */
 const listCheckouts = async (req, res, next) => {
     try {
-        let checkouts = await prisma.checkout.findMany({
+        const checkouts = await prisma.checkout.findMany({
             include: {
                 order: true,
                 History_Transaction: true
             }
         });
 
-        res.status(200).json({
+        return res.status(200).json({
             status: true,
             message: "Checkouts retrieved successfully",
             data: checkouts
@@ -74,7 +94,7 @@ const listCheckouts = async (req, res, next) => {
  * @param {import("express").NextFunction} next
  */
 const getCheckout = async (req, res, next) => {
-    let checkoutId = Number(req.params.id);
+    const checkoutId = Number(req.params.id);
 
     try {
         const checkout = await prisma.checkout.findUnique({
@@ -93,7 +113,7 @@ const getCheckout = async (req, res, next) => {
             });
         }
 
-        res.status(200).json({
+        return res.status(200).json({
             status: true,
             message: "Checkout retrieved successfully",
             data: checkout
@@ -111,9 +131,6 @@ const getCheckout = async (req, res, next) => {
 const updateCheckout = async (req, res, next) => {
     const checkoutId = Number(req.params.id);
     let {
-        metode_pembayaran,
-        is_payment,
-        total,
         orderId
     } = req.body;
 
@@ -122,9 +139,7 @@ const updateCheckout = async (req, res, next) => {
         const updatedCheckout = await prisma.checkout.update({
             where: { id: checkoutId },
             data: {
-                metode_pembayaran,
-                is_payment,
-                total,
+                is_payment: true,
                 tanggal_waktu,
                 order: { connect: { id: orderId } }
             }
@@ -135,7 +150,7 @@ const updateCheckout = async (req, res, next) => {
             data: { tanggal_waktu }
         });
 
-        res.status(200).json({
+        return res.status(200).json({
             status: true,
             message: "Checkout and History Transaction updated successfully",
             data: updatedCheckout
@@ -162,7 +177,7 @@ const deleteCheckout = async (req, res, next) => {
             where: { id: checkoutId }
         });
 
-        res.status(200).json({
+        return res.status(200).json({
             status: true,
             message: "Checkout and corresponding History Transaction deleted successfully"
         });
