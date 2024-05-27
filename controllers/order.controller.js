@@ -8,7 +8,7 @@ const prisma = new PrismaClient();
  */
 const createOrder = async (req, res, next) => {
     try {
-        let {
+        const {
             nama,
             tanggal_lahir,
             kewarganegaraan,
@@ -51,7 +51,7 @@ const createOrder = async (req, res, next) => {
             }
         });
 
-        res.status(201).json({
+        return res.status(201).json({
             status: true,
             message: "Order created successfully",
             data: newOrder
@@ -68,14 +68,17 @@ const createOrder = async (req, res, next) => {
  */
 const listOrders = async (req, res, next) => {
     try {
+        const { id } = req.body;
+
         const orders = await prisma.order.findMany({
             include: {
                 ticket: true,
                 user: true
-            }
+            },
+            where: id
         });
 
-        res.status(200).json({
+        return res.status(200).json({
             status: true,
             message: "Orders retrieved successfully",
             data: orders
@@ -94,6 +97,13 @@ const getOrder = async (req, res, next) => {
     const orderId = Number(req.params.id);
 
     try {
+        if (!orderId) {
+            return res.status(400).json({
+                status: 400,
+                message: "Bad Request"
+            });
+        }
+
         const order = await prisma.order.findUnique({
             where: { id: orderId },
             include: {
@@ -110,7 +120,7 @@ const getOrder = async (req, res, next) => {
             });
         }
 
-        res.status(200).json({
+        return res.status(200).json({
             status: true,
             message: "Order retrieved successfully",
             data: order
@@ -127,7 +137,7 @@ const getOrder = async (req, res, next) => {
  */
 const updateOrder = async (req, res, next) => {
     const orderId = Number(req.params.id);
-    let { nama,
+    const { nama,
         tanggal_lahir,
         kewarganegaraan,
         ktp_pasport,
@@ -136,6 +146,13 @@ const updateOrder = async (req, res, next) => {
         no_kursi,
         is_baby
     } = req.body;
+
+    if (!orderId) {
+        return res.status(400).json({
+            status: 400,
+            message: "Bad Request"
+        });
+    }
 
     const tickets = await prisma.ticket.findMany({
         select: {
@@ -171,7 +188,7 @@ const updateOrder = async (req, res, next) => {
             }
         });
 
-        res.status(200).json({
+        return res.status(200).json({
             status: true,
             message: "Order updated successfully",
             data: updatedOrder
@@ -190,11 +207,18 @@ const deleteOrder = async (req, res, next) => {
     const orderId = Number(req.params.id);
 
     try {
+        if (!orderId) {
+            return res.status(400).json({
+                status: 400,
+                message: "Bad Request"
+            });
+        }
+
         await prisma.order.delete({
             where: { id: orderId }
         });
 
-        res.status(200).json({
+        return res.status(200).json({
             status: true,
             message: "Order deleted successfully"
         });
