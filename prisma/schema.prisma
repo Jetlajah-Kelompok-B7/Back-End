@@ -97,12 +97,12 @@ model Airline {
 }
 
 model Airport {
-    id            Int      @id @default(autoincrement())
-    kode_bandara  String   @unique
+    id            Int       @id @default(autoincrement())
+    kode_bandara  String    @unique
     nama_bandara  String
     lokasi        String
-    keberangkatan Flight[] @relation(name: "keberangkatan")
-    kedatangan    Flight[] @relation(name: "kedatangan")
+    keberangkatan Flight[]  @relation(name: "keberangkatan")
+    kedatangan    Flight[]  @relation(name: "kedatangan")
     Transit       Transit[]
 
     @@map("airports")
@@ -118,9 +118,9 @@ model Flight {
     terminal_kedatangan      String
     status                   Plane_Status
     Schedule                 Schedule?
-    Plane      Plane?   @relation(fields: [planeId], references: [id])
-    planeId    Int?
-    Transit    Transit[]
+    Plane                    Plane?       @relation(fields: [planeId], references: [id])
+    planeId                  Int?
+    Transit                  Transit[]
 
     @@map("flights")
 }
@@ -169,9 +169,9 @@ model Order {
 model Checkout {
     id                  Int                  @id @default(autoincrement())
     metode_pembayaran   String
-    is_payment          Boolean
+    is_payment          Boolean              @default(false)
     total               Int
-    tanggal_waktu       DateTime             @db.Timestamptz()
+    tanggal_waktu       DateTime?            @db.Timestamptz()
     order               Order                @relation(fields: [orderId], references: [id])
     orderId             Int                  @unique
     History_Transaction History_Transaction?
@@ -186,11 +186,11 @@ model History_Transaction {
 }
 
 model Transit {
-    id Int      @id @default(autoincrement())
-    flightId    Int
-    airportId   Int
-    flight      Flight @relation(fields: [flightId], references: [id])
-    airport     Airport @relation(fields: [airportId], references: [id])
+    id        Int     @id @default(autoincrement())
+    flightId  Int
+    airportId Int
+    flight    Flight  @relation(fields: [flightId], references: [id])
+    airport   Airport @relation(fields: [airportId], references: [id])
 
     @@map("transits")
 }
