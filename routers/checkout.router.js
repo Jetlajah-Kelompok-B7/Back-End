@@ -3,7 +3,7 @@ const { createCheckout, deleteCheckout, getCheckout, listCheckouts, updateChecko
 const { restrict } = require("../middlewares/middleware");
 
 app.get("/", listCheckouts);
-app.post("/", createCheckout);
+app.post("/:id", createCheckout);
 app.get("/:id", getCheckout);
 app.put("/:id", updateCheckout);
 app.delete("/:id", deleteCheckout);
