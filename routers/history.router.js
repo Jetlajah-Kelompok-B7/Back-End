@@ -1,7 +1,8 @@
-const app = require('express').Router();
-const controller = require('../controllers/history_transaction.controller');
+const app = require("express").Router();
+const { createHistoryTransaction, deleteHistoryTransaction, getHistoryTransaction, listHistoryTransactions, updateHistoryTransaction } = require("../controllers/history_transaction.controller");
+const { restrict } = require("../middlewares/middleware");
 
-app.get('/', controller.listHistoryTransactions);
-app.get('/:id', controller.getHistoryTransaction);
+app.get("/", listHistoryTransactions);
+app.get("/:id", getHistoryTransaction);
 
 module.exports = app;

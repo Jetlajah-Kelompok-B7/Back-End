@@ -1,8 +1,11 @@
-const app = require('express').Router();
-const controller = require('../controllers/checkout.controller');
+const app = require("express").Router();
+const { createCheckout, deleteCheckout, getCheckout, listCheckouts, updateCheckout } = require("../controllers/checkout.controller");
+const { restrict } = require("../middlewares/middleware");
 
-app.post('/', controller.createCheckout);
-app.get('/', controller.listCheckouts);
-app.get('/:id', controller.getCheckout);
+app.get("/", listCheckouts);
+app.post("/", createCheckout);
+app.get("/:id", getCheckout);
+app.put("/:id", updateCheckout);
+app.delete("/:id", deleteCheckout);
 
 module.exports = app;
