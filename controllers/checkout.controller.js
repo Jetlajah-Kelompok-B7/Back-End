@@ -3,7 +3,7 @@ const prisma = new PrismaClient();
 
 module.exports = {
     createCheckout: async (req, res, next) => {
-        let { 
+        let {
             metode_pembayaran,
             is_payment,
             total,
@@ -86,11 +86,11 @@ module.exports = {
 
     updateCheckout: async (req, res, next) => {
         const checkoutId = Number(req.params.id);
-        let { 
-            metode_pembayaran, 
-            is_payment, 
-            total, 
-            tanggal_waktu, 
+        let {
+            metode_pembayaran,
+            is_payment,
+            total,
+            tanggal_waktu,
             orderId } = req.body;
 
         try {

@@ -5,180 +5,192 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+    provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
 }
 
 model User {
-  id           Int            @id @default(autoincrement())
-  email        String         @unique
-  password     String
-  is_verified  Boolean        @default(false)
-  role         Role           @default(USER)
-  Profile      Profile?
-  Notification Notification[]
-  Order        Order[]
+    id           Int            @id @default(autoincrement())
+    email        String         @unique
+    password     String
+    is_verified  Boolean        @default(false)
+    role         Role           @default(USER)
+    Profile      Profile?
+    Notification Notification[]
+    Order        Order[]
 
-  @@map("users")
+    @@map("users")
 }
 
 enum Role {
-  USER
-  ADMIN
+    USER
+    ADMIN
 }
 
 model Profile {
-  id            Int     @id @default(autoincrement())
-  nama          String
-  no_telp       String
-  tanggal_lahir String?
-  alamat        String?
-  photo_profile String?
-  pin           Int?
-  user          User    @relation(fields: [userId], references: [id])
-  userId        Int     @unique
+    id            Int     @id @default(autoincrement())
+    nama          String
+    no_telp       String
+    tanggal_lahir String?
+    alamat        String?
+    photo_profile String?
+    pin           Int?
+    user          User    @relation(fields: [userId], references: [id])
+    userId        Int     @unique
 
-  @@map("profiles")
+    @@map("profiles")
 }
 
 model Notification {
-  id            Int              @id @default(autoincrement())
-  judul         String
-  deskripsi     String
-  tanggal_waktu String
-  kategori      NotificationEnum @default(INFO)
-  user          User             @relation(fields: [userId], references: [id])
-  userId        Int
+    id            Int              @id @default(autoincrement())
+    judul         String
+    deskripsi     String
+    tanggal_waktu DateTime         @db.Timestamptz()
+    kategori      NotificationEnum @default(INFO)
+    user          User             @relation(fields: [userId], references: [id])
+    userId        Int
 
-  @@map("notifications")
+    @@map("notifications")
 }
 
 enum NotificationEnum {
-  INFO
-  WARNING
-  PROMO
+    INFO
+    WARNING
+    PROMO
 }
 
 model Plane {
-  id            Int          @id @default(autoincrement())
-  kode_pesawat  String
-  model_pesawat String
-  bagasi_kabin  Int
-  bagasi        Int
-  jarak_kursi   Int
-  jumlah_kursi  Int
-  status        Plane_Status
-  Ticket        Ticket[]
-  Airline       Airline?     @relation(fields: [airlineId], references: [id])
-  airlineId     Int?
+    id            Int          @id @default(autoincrement())
+    kode_pesawat  String
+    model_pesawat String
+    bagasi_kabin  Int
+    bagasi        Int
+    jarak_kursi   Int
+    jumlah_kursi  Int
+    status        Plane_Status
+    Flight        Flight[]
+    Airline       Airline?     @relation(fields: [airlineId], references: [id])
+    airlineId     Int?
 
-  @@map("planes")
+    @@map("planes")
 }
 
 enum Plane_Status {
-  Delayed
-  Boarding
-  Cancelled
-  Arrived
+    Delayed
+    Boarding
+    Cancelled
+    Arrived
 }
 
 model Airline {
-  id            Int     @id @default(autoincrement())
-  kode_maskapai String
-  nama_maskapai String
-  logo_maskapai String
-  planes        Plane[]
+    id            Int     @id @default(autoincrement())
+    kode_maskapai String  @unique
+    nama_maskapai String
+    logo_maskapai String
+    planes        Plane[]
 
-  @@map("airlines")
+    @@map("airlines")
 }
 
 model Airport {
-  id            Int      @id @default(autoincrement())
-  kode_bandara  String
-  nama_bandara  String
-  lokasi        String
-  keberangkatan Flight[] @relation(name: "keberangkatan")
-  kedatangan    Flight[] @relation(name: "kedatangan")
+    id            Int      @id @default(autoincrement())
+    kode_bandara  String   @unique
+    nama_bandara  String
+    lokasi        String
+    keberangkatan Flight[] @relation(name: "keberangkatan")
+    kedatangan    Flight[] @relation(name: "kedatangan")
+    Transit       Transit[]
 
-  @@map("airports")
+    @@map("airports")
 }
 
 model Flight {
-  id                       Int          @id @default(autoincrement())
-  bandara_keberangkatan    Airport      @relation(name: "keberangkatan", fields: [bandara_keberangkatan_id], references: [id])
-  bandara_keberangkatan_id Int
-  bandara_kedatangan       Airport      @relation(name: "kedatangan", fields: [bandara_kedatangan_id], references: [id])
-  bandara_kedatangan_id    Int
-  terminal_keberangkatan   String
-  terminal_kedatangan      String
-  status                   Plane_Status
-  Schedule                 Schedule?
+    id                       Int          @id @default(autoincrement())
+    bandara_keberangkatan    Airport      @relation(name: "keberangkatan", fields: [bandara_keberangkatan_id], references: [id])
+    bandara_keberangkatan_id Int
+    bandara_kedatangan       Airport      @relation(name: "kedatangan", fields: [bandara_kedatangan_id], references: [id])
+    bandara_kedatangan_id    Int
+    terminal_keberangkatan   String
+    terminal_kedatangan      String
+    status                   Plane_Status
+    Schedule                 Schedule?
+    Plane      Plane?   @relation(fields: [planeId], references: [id])
+    planeId    Int?
+    Transit    Transit[]
 
-  @@map("flights")
+    @@map("flights")
 }
 
 model Schedule {
-  id            Int      @id @default(autoincrement())
-  flight        Flight   @relation(fields: [flightId], references: [id])
-  flightId      Int      @unique
-  keberangkatan DateTime @db.Timestamptz()
-  kedatangan    DateTime @db.Timestamptz()
-  Ticket        Ticket[]
+    id            Int      @id @default(autoincrement())
+    flight        Flight   @relation(fields: [flightId], references: [id])
+    flightId      Int      @unique
+    keberangkatan DateTime @db.Timestamptz()
+    kedatangan    DateTime @db.Timestamptz()
+    Ticket        Ticket[]
 
-  @@map("schedules")
+    @@map("schedules")
 }
 
 model Ticket {
-  id         Int      @id @default(autoincrement())
-  kelas      String
-  price      Int
-  schedule   Schedule @relation(fields: [scheduleId], references: [id])
-  scheduleId Int
-  Order      Order[]
-  Plane      Plane?   @relation(fields: [planeId], references: [id])
-  planeId    Int?
+    id         Int      @id @default(autoincrement())
+    kelas      String
+    price      Int
+    schedule   Schedule @relation(fields: [scheduleId], references: [id])
+    scheduleId Int
+    Order      Order[]
 
-  @@map("tickets")
+    @@map("tickets")
 }
 
 model Order {
-  id              Int       @id @default(autoincrement())
-  ticket          Ticket    @relation(fields: [ticketId], references: [id])
-  ticketId        Int
-  user            User      @relation(fields: [userId], references: [id])
-  userId          Int
-  nama            String
-  tanggal_lahir   String
-  kewarganegaraan String
-  ktp_pasport     String
-  negara_penerbit String
-  berlaku_sampai  DateTime  @db.Timestamptz()
-  no_kursi        Int
-  Checkout        Checkout?
+    id              Int       @id @default(autoincrement())
+    ticket          Ticket    @relation(fields: [ticketId], references: [id])
+    ticketId        Int
+    user            User      @relation(fields: [userId], references: [id])
+    userId          Int
+    nama            String
+    tanggal_lahir   String
+    kewarganegaraan String
+    ktp_pasport     String?
+    is_baby         Boolean
+    negara_penerbit String
+    berlaku_sampai  DateTime  @db.Timestamptz()
+    no_kursi        Int
+    Checkout        Checkout?
 
-  @@map("orders")
+    @@map("orders")
 }
 
 model Checkout {
-  id                  Int                  @id @default(autoincrement())
-  metode_pembayaran   String
-  is_payment          Boolean
-  total               Int
-  tanggal_waktu       DateTime             @db.Timestamptz()
-  order               Order                @relation(fields: [orderId], references: [id])
-  orderId             Int                  @unique
-  History_Transaction History_Transaction?
+    id                  Int                  @id @default(autoincrement())
+    metode_pembayaran   String
+    is_payment          Boolean
+    total               Int
+    tanggal_waktu       DateTime             @db.Timestamptz()
+    order               Order                @relation(fields: [orderId], references: [id])
+    orderId             Int                  @unique
+    History_Transaction History_Transaction?
 
-  @@map("checkouts")
+    @@map("checkouts")
 }
 
 model History_Transaction {
-  id            Int      @id @default(autoincrement())
-  tanggal_waktu DateTime @db.Timestamptz()
-  checkout      Checkout @relation(fields: [checkoutId], references: [id])
-  checkoutId    Int      @unique
+    id         Int      @id @default(autoincrement())
+    checkout   Checkout @relation(fields: [checkoutId], references: [id])
+    checkoutId Int      @unique
+}
+
+model Transit {
+    id Int      @id @default(autoincrement())
+    flightId    Int
+    airportId   Int
+    flight      Flight @relation(fields: [flightId], references: [id])
+    airport     Airport @relation(fields: [airportId], references: [id])
+
+    @@map("transits")
 }
