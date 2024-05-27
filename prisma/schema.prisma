@@ -1,0 +1,184 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int            @id @default(autoincrement())
+  email        String         @unique
+  password     String
+  is_verified  Boolean        @default(false)
+  role         Role           @default(USER)
+  Profile      Profile?
+  Notification Notification[]
+  Order        Order[]
+
+  @@map("users")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Profile {
+  id            Int     @id @default(autoincrement())
+  nama          String
+  no_telp       String
+  tanggal_lahir String?
+  alamat        String?
+  photo_profile String?
+  pin           Int?
+  user          User    @relation(fields: [userId], references: [id])
+  userId        Int     @unique
+
+  @@map("profiles")
+}
+
+model Notification {
+  id            Int              @id @default(autoincrement())
+  judul         String
+  deskripsi     String
+  tanggal_waktu String
+  kategori      NotificationEnum @default(INFO)
+  user          User             @relation(fields: [userId], references: [id])
+  userId        Int
+
+  @@map("notifications")
+}
+
+enum NotificationEnum {
+  INFO
+  WARNING
+  PROMO
+}
+
+model Plane {
+  id            Int          @id @default(autoincrement())
+  kode_pesawat  String
+  model_pesawat String
+  bagasi_kabin  Int
+  bagasi        Int
+  jarak_kursi   Int
+  jumlah_kursi  Int
+  status        Plane_Status
+  Ticket        Ticket[]
+  Airline       Airline?     @relation(fields: [airlineId], references: [id])
+  airlineId     Int?
+
+  @@map("planes")
+}
+
+enum Plane_Status {
+  Delayed
+  Boarding
+  Cancelled
+  Arrived
+}
+
+model Airline {
+  id            Int     @id @default(autoincrement())
+  kode_maskapai String
+  nama_maskapai String
+  logo_maskapai String
+  planes        Plane[]
+
+  @@map("airlines")
+}
+
+model Airport {
+  id            Int      @id @default(autoincrement())
+  kode_bandara  String
+  nama_bandara  String
+  lokasi        String
+  keberangkatan Flight[] @relation(name: "keberangkatan")
+  kedatangan    Flight[] @relation(name: "kedatangan")
+
+  @@map("airports")
+}
+
+model Flight {
+  id                       Int          @id @default(autoincrement())
+  bandara_keberangkatan    Airport      @relation(name: "keberangkatan", fields: [bandara_keberangkatan_id], references: [id])
+  bandara_keberangkatan_id Int
+  bandara_kedatangan       Airport      @relation(name: "kedatangan", fields: [bandara_kedatangan_id], references: [id])
+  bandara_kedatangan_id    Int
+  terminal_keberangkatan   String
+  terminal_kedatangan      String
+  status                   Plane_Status
+  Schedule                 Schedule?
+
+  @@map("flights")
+}
+
+model Schedule {
+  id            Int      @id @default(autoincrement())
+  flight        Flight   @relation(fields: [flightId], references: [id])
+  flightId      Int      @unique
+  keberangkatan DateTime @db.Timestamptz()
+  kedatangan    DateTime @db.Timestamptz()
+  Ticket        Ticket[]
+
+  @@map("schedules")
+}
+
+model Ticket {
+  id         Int      @id @default(autoincrement())
+  kelas      String
+  price      Int
+  schedule   Schedule @relation(fields: [scheduleId], references: [id])
+  scheduleId Int
+  Order      Order[]
+  Plane      Plane?   @relation(fields: [planeId], references: [id])
+  planeId    Int?
+
+  @@map("tickets")
+}
+
+model Order {
+  id              Int       @id @default(autoincrement())
+  ticket          Ticket    @relation(fields: [ticketId], references: [id])
+  ticketId        Int
+  user            User      @relation(fields: [userId], references: [id])
+  userId          Int
+  nama            String
+  tanggal_lahir   String
+  kewarganegaraan String
+  ktp_pasport     String
+  negara_penerbit String
+  berlaku_sampai  DateTime  @db.Timestamptz()
+  no_kursi        Int
+  Checkout        Checkout?
+
+  @@map("orders")
+}
+
+model Checkout {
+  id                  Int                  @id @default(autoincrement())
+  metode_pembayaran   String
+  is_payment          Boolean
+  total               Int
+  tanggal_waktu       DateTime             @db.Timestamptz()
+  order               Order                @relation(fields: [orderId], references: [id])
+  orderId             Int                  @unique
+  History_Transaction History_Transaction?
+
+  @@map("checkouts")
+}
+
+model History_Transaction {
+  id            Int      @id @default(autoincrement())
+  tanggal_waktu DateTime @db.Timestamptz()
+  checkout      Checkout @relation(fields: [checkoutId], references: [id])
+  checkoutId    Int      @unique
+}

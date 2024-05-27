@@ -1,0 +1,11 @@
+{
+    "ticketId": 125,
+    "userId": 458,
+    "nama": "Alice",
+    "tanggal_lahir": "1992-05-15",
+    "kewarganegaraan": "Indonesia",
+    "ktp_pasport": "456789123",
+    "negara_penerbit": "Indonesia",
+    "berlaku_sampai": "2025-01-01",
+    "no_kursi": 3
+  }
