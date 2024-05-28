@@ -161,6 +161,7 @@ model Order {
     negara_penerbit String
     berlaku_sampai  DateTime  @db.Timestamptz()
     no_kursi        Int
+    nama_keluarga   String?
     Checkout        Checkout?
 
     @@map("orders")
