@@ -173,11 +173,18 @@ model Checkout {
     is_payment          Boolean              @default(false)
     total               Int
     tanggal_waktu       DateTime?            @db.Timestamptz()
+    status              CheckoutStatus       @default(Unpaid)
     order               Order                @relation(fields: [orderId], references: [id])
     orderId             Int                  @unique
     History_Transaction History_Transaction?
 
     @@map("checkouts")
+}
+
+enum CheckoutStatus {
+    Cancelled
+    Paid
+    Unpaid
 }
 
 model History_Transaction {
