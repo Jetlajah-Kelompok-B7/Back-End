@@ -148,7 +148,7 @@ const prisma = new PrismaClient();
                                                                         negara_penerbit: "Indonesia",
                                                                         berlaku_sampai: new Date(currentDate.getTime() + (1 * 60 * 60 * 1000)),
                                                                         no_kursi: 1,
-                                                                        is_baby: false,
+                                                                        is_baby: false
                                                                     },
                                                                     {
                                                                         nama: "Balya",
@@ -158,7 +158,7 @@ const prisma = new PrismaClient();
                                                                         negara_penerbit: "Indonesia",
                                                                         berlaku_sampai: new Date(currentDate.getTime() + (1 * 60 * 60 * 1000)),
                                                                         no_kursi: 2,
-                                                                        is_baby: false,
+                                                                        is_baby: false
                                                                     },
                                                                     {
                                                                         nama: "Hanafi",
@@ -168,7 +168,7 @@ const prisma = new PrismaClient();
                                                                         negara_penerbit: "Indonesia",
                                                                         berlaku_sampai: new Date(currentDate.getTime() + (1 * 60 * 60 * 1000)),
                                                                         no_kursi: 3,
-                                                                        is_baby: false,
+                                                                        is_baby: false
                                                                     }
                                                                 ]
                                                             },
