@@ -106,6 +106,46 @@ const login = async (req, res, next) => {
  * @param {import("express").Response} res
  * @param {import("express").NextFunction} next
  */
+const createPin = async (req, res, next) => {
+    try {
+        const { pin } = req.body;
+
+        const user = await prisma.user.findFirst({ where: { email: req.user.email } });
+
+        if (!user) {
+            return res.status(401).json({
+                status: 401,
+                message: "invalid email or password!"
+            });
+        }
+
+        await prisma.profile.upsert({
+            create: {
+                pin
+            },
+            update: {
+                pin
+            },
+            where: {
+                userId: user.id
+            }
+        });
+
+        return res.status(200).json({
+            status: 200,
+            message: "OK",
+            data: req.user
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
 const whoami = async (req, res, next) => {
     try {
         return res.status(200).json({
@@ -121,5 +161,6 @@ const whoami = async (req, res, next) => {
 module.exports = {
     register,
     login,
-    whoami
+    whoami,
+    createPin
 };
