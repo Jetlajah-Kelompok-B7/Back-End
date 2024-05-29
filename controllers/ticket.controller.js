@@ -38,6 +38,7 @@ module.exports = {
                     }
                 },
                 select: {
+                    id: true,
                     kelas: true,
                     price: true,
                     schedule: {
