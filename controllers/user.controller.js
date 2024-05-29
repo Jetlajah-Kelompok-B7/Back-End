@@ -9,7 +9,7 @@ const bcrypt = require("bcrypt");
  */
 const profile = async (req, res, next) => {
     try {
-        const users = await prisma.user.findUnique({
+        const users = await prisma.profile.findUnique({
             where: {
                 id: req.user.id
             }
@@ -160,7 +160,7 @@ const notification = async (req, res, next) => {
 
         const notifications = await prisma.notification.findMany({
             where: {
-                id: users.id
+                userId: users.id
             },
             orderBy: {
                 tanggal_waktu: "desc"
