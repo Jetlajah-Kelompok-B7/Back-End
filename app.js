@@ -5,7 +5,7 @@ const port = 3000;
 app.use(express.json());
 
 const router = require('./routers/index.router');
-app.use('/test', router);
+app.use('/api', router);
 
 app.listen(port, () => {
     console.log(`${port} is running`);
