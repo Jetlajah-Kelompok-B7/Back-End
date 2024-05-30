@@ -1,0 +1,106 @@
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
+const bcrypt = require("bcrypt");
+
+/**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
+const profile = async (req, res, next) => {
+    try {
+        const users = await prisma.profile.findUnique({
+            where: {
+                id: req.user.id
+            }
+        });
+
+        delete users.password;
+
+        return res.status(200).json({
+            status: true,
+            message: "OK",
+            data: users
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
+const updateProfile = async (req, res, next) => {
+    const { nama, tanggal_lahir, no_telp, alamat, photo_profile, pin } = req.body;
+    try {
+        const users = await prisma.user.findUnique({
+            where: {
+                id: req.user.id
+            }
+        }).Profile();
+
+        const profile = await prisma.profile.update({
+            data: {
+                nama: nama ? nama : users.nama,
+                tanggal_lahir: tanggal_lahir ? tanggal_lahir : users.tanggal_lahir,
+                no_telp: no_telp ? no_telp : users.no_telp,
+                alamat: alamat ? alamat : users.alamat,
+                photo_profile: photo_profile ? photo_profile : users.photo_profile,
+                pin: pin ? pin : users.pin
+            },
+            where: {
+                userId: users.id
+            }
+        });
+
+        return res.status(200).json({
+            status: true,
+            message: "OK",
+            data: profile
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
+const notification = async (req, res, next) => {
+    try {
+        const users = await prisma.user.findUnique({
+            where: {
+                id: req.user.id
+            }
+        });
+
+        const notifications = await prisma.notification.findMany({
+            where: {
+                userId: users.id
+            },
+            orderBy: {
+                tanggal_waktu: "desc"
+            }
+        });
+
+        delete users.password;
+
+        return res.status(200).json({
+            status: false,
+            message: "OK",
+            data: notifications
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+module.exports = {
+    profile,
+    updateProfile,
+    notification
+};

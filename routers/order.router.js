@@ -1,9 +1,11 @@
-const express = require('express');
-const router  = express.Router()
-const controller = require('../controllers/order.controller');
+const app = require("express").Router();
+const { createOrder, getOrder, deleteOrder, listOrders, updateOrder } = require("../controllers/order.controller");
+const { restrict } = require("../middlewares/middleware");
 
-router.get('/', controller.listOrders);
-router.post('/', controller.createOrder);
-router.get('/:id', controller.getOrder);
+app.get("/", restrict, listOrders);
+app.post("/", restrict, createOrder);
+app.get("/:id", restrict, getOrder);
+app.put("/:id", restrict, updateOrder);
+app.delete("/:id", restrict, deleteOrder);
 
-module.exports = router;
+module.exports = app;
