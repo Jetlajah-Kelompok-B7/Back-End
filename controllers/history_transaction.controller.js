@@ -41,20 +41,79 @@ const createHistoryTransaction = async (req, res, next) => {
  */
 const listHistoryTransactions = async (req, res, next) => {
     try {
+        const historyTransactionsTotal = await prisma.history_Transaction.count();
+
+        const pagination = paginationUtils(req.query.page, req.query.page_size, historyTransactionsTotal);
+
         const historyTransactions = await prisma.history_Transaction.findMany({
-            include: { checkout: true }
+            include: {
+                checkout: {
+                    include: {
+                        order: {
+                            include: {
+                                ticket: {
+                                    include: {
+                                        schedule: {
+                                            include: {
+                                                flight: {
+                                                    include: {
+                                                        bandara_keberangkatan: true,
+                                                        bandara_kedatangan: true
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                user: {
+                                    select: {
+                                        id: true,
+                                        Profile: {
+                                            select: {
+                                                nama: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            take: pagination.page_size,
+            skip: (pagination.current_page - 1) * pagination.page_size
         });
 
-        return res.status(200).json({
+        const data = historyTransactions.map(ht => {
+            const checkout = ht.checkout;
+            const order = checkout.order;
+            const ticket = order.ticket;
+            const schedule = ticket.schedule;
+            const flight = schedule.flight;
+            const departureAirport = flight.bandara_keberangkatan;
+            const arrivalAirport = flight.bandara_kedatangan;
+            const user = order.user;
+
+            return {
+                total_price: checkout.total,
+                class: ticket.kelas,
+                timestamp: checkout.tanggal_waktu,
+                passenger_id: user.id,
+                passenger_name: user.Profile ? user.Profile.nama : null,
+                departure_airport_name: departureAirport.nama_bandara,
+                arrival_airport_name: arrivalAirport.nama_bandara
+            };
+        });
+
+        res.status(200).json({
             status: true,
-            message: "History Transactions retrieved successfully",
-            data: historyTransactions
+            message: 'History Transactions retrieved successfully',
+            data: data,
         });
     } catch (error) {
         next(error);
     }
-};
-
+}
 /**
  * @param {import("express").Request} req
  * @param {import("express").Response} res
@@ -66,7 +125,40 @@ const getHistoryTransaction = async (req, res, next) => {
     try {
         const historyTransaction = await prisma.history_Transaction.findUnique({
             where: { id: historyTransactionId },
-            include: { checkout: true }
+            include: {
+                checkout: {
+                    include: {
+                        order: {
+                            include: {
+                                ticket: {
+                                    include: {
+                                        schedule: {
+                                            include: {
+                                                flight: {
+                                                    include: {
+                                                        bandara_keberangkatan: true,
+                                                        bandara_kedatangan: true
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                user: {
+                                    select: {
+                                        id: true,
+                                        Profile: {
+                                            select: {
+                                                nama: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         });
 
         if (!historyTransaction) {
@@ -77,15 +169,35 @@ const getHistoryTransaction = async (req, res, next) => {
             });
         }
 
+        const checkout = historyTransaction.checkout;
+        const order = checkout.order;
+        const ticket = order.ticket;
+        const schedule = ticket.schedule;
+        const flight = schedule.flight;
+        const departureAirport = flight.bandara_keberangkatan;
+        const arrivalAirport = flight.bandara_kedatangan;
+        const user = order.user;
+
+        const data = {
+            total_price: checkout.total,
+            class: ticket.kelas,
+            timestamp: checkout.tanggal_waktu,
+            passenger_id: user.id,
+            passenger_name: user.Profile ? user.Profile.nama : null,
+            departure_airport_name: departureAirport.nama_bandara,
+            arrival_airport_name: arrivalAirport.nama_bandara
+        };
+
         return res.status(200).json({
             status: true,
             message: "History Transaction retrieved successfully",
-            data: historyTransaction
+            data: data
         });
     } catch (error) {
         next(error);
     }
 };
+
 
 /**
  * @param {import("express").Request} req
