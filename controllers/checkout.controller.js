@@ -39,7 +39,7 @@ const createCheckout = async (req, res, next) => {
                 }
             },
             where: {
-                ticketId: orderParams,
+                id: orderParams,
                 userId: 2
             }
         });
