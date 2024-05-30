@@ -7,13 +7,12 @@ const prisma = new PrismaClient();
  * @param {import("express").NextFunction} next
  */
 const createCheckout = async (req, res, next) => {
-    const { metode_pembayaran } = req.body;
     const orderParams = Number(req.params.id);
 
     try {
-        if (!orderParams || !metode_pembayaran) {
+        if (!orderParams) {
             return res.status(400).json({
-                status: 400,
+                status: false,
                 message: "Bad Request"
             });
         }
@@ -26,7 +25,7 @@ const createCheckout = async (req, res, next) => {
 
         if (exists) {
             return res.status(400).json({
-                status: 400,
+                status: false,
                 message: "Bad Request"
             });
         }
@@ -35,28 +34,32 @@ const createCheckout = async (req, res, next) => {
             include: {
                 ticket: {
                     select: {
-                        price: true
+                        harga: true
                     }
                 }
             },
             where: {
-                id: orderParams
+                ticketId: orderParams,
+                userId: 2
             }
         });
 
-        const total = order.reduce((acc, curr) => acc + curr.ticket.price, 0);
+        const total = order.reduce((acc, curr) => acc + curr.ticket.harga, 0);
 
         const newCheckout = await prisma.checkout.create({
             data: {
-                metode_pembayaran,
                 total: total,
-                order: { connect: { id: orderParams } }
+                order: {
+                    connect: {
+                        id: orderParams
+                    }
+                }
             }
         });
 
         return res.status(201).json({
             status: true,
-            message: "Checkout and History Transaction created successfully",
+            message: "Checkout successfully created",
             data: newCheckout
         });
     } catch (error) {
@@ -73,7 +76,7 @@ const listCheckouts = async (req, res, next) => {
     try {
         const checkouts = await prisma.checkout.findMany({
             include: {
-                order: true,
+                Order: true,
                 History_Transaction: true
             }
         });
@@ -100,7 +103,7 @@ const getCheckout = async (req, res, next) => {
         const checkout = await prisma.checkout.findUnique({
             where: { id: checkoutId },
             include: {
-                order: true,
+                Order: true,
                 History_Transaction: true
             }
         });
@@ -128,10 +131,11 @@ const getCheckout = async (req, res, next) => {
  * @param {import("express").Response} res
  * @param {import("express").NextFunction} next
  */
-const updateCheckout = async (req, res, next) => {
+const confirmCheckout = async (req, res, next) => {
     const checkoutId = Number(req.params.id);
-    let {
-        orderId
+    const {
+        orderId,
+        metode_pembayaran
     } = req.body;
 
     try {
@@ -139,9 +143,10 @@ const updateCheckout = async (req, res, next) => {
         const updatedCheckout = await prisma.checkout.update({
             where: { id: checkoutId },
             data: {
-                is_payment: true,
+                metode_pembayaran,
                 tanggal_waktu,
-                order: { connect: { id: orderId } }
+                is_payment: true,
+                Order: { connect: { id: orderId } }
             }
         });
 
@@ -150,7 +155,7 @@ const updateCheckout = async (req, res, next) => {
             data: { tanggal_waktu }
         });
 
-        return res.status(200).json({
+        return res.status(201).json({
             status: true,
             message: "Checkout and History Transaction updated successfully",
             data: updatedCheckout
@@ -190,6 +195,6 @@ module.exports = {
     createCheckout,
     listCheckouts,
     getCheckout,
-    updateCheckout,
+    confirmCheckout,
     deleteCheckout
 };

@@ -8,16 +8,20 @@ const prisma = new PrismaClient();
  */
 const createOrder = async (req, res, next) => {
     try {
-        const {
-            nama,
-            tanggal_lahir,
-            kewarganegaraan,
-            ktp_pasport,
-            negara_penerbit,
-            berlaku_sampai,
-            no_kursi,
-            is_baby
-        } = req.body;
+        const { orders } = req.body;
+
+        const ordersArr = [];
+
+        if (orders.length > 0) {
+            orders.forEach((order) => {
+                ordersArr.push(order);
+            });
+        } else {
+            return res.status(400).json({
+                status: false,
+                message: "Bad Request"
+            });
+        }
 
         const tickets = await prisma.ticket.findMany({
             select: {
@@ -30,14 +34,9 @@ const createOrder = async (req, res, next) => {
 
         const newOrder = await prisma.order.create({
             data: {
-                nama,
-                tanggal_lahir,
-                kewarganegaraan,
-                ktp_pasport,
-                negara_penerbit,
-                berlaku_sampai,
-                no_kursi,
-                is_baby,
+                Orders: {
+                    create: ordersArr
+                },
                 ticket: {
                     connect: {
                         id: randomTicketId
@@ -45,7 +44,7 @@ const createOrder = async (req, res, next) => {
                 },
                 user: {
                     connect: {
-                        id: 2
+                        id: req.user.id
                     }
                 }
             }
@@ -68,14 +67,14 @@ const createOrder = async (req, res, next) => {
  */
 const listOrders = async (req, res, next) => {
     try {
-        const { id } = req.body;
-
         const orders = await prisma.order.findMany({
             include: {
                 ticket: true,
                 user: true
             },
-            where: id
+            where: {
+                userId: req.user.id
+            }
         });
 
         return res.status(200).json({
@@ -99,7 +98,7 @@ const getOrder = async (req, res, next) => {
     try {
         if (!orderId) {
             return res.status(400).json({
-                status: 400,
+                status: false,
                 message: "Bad Request"
             });
         }
@@ -137,7 +136,8 @@ const getOrder = async (req, res, next) => {
  */
 const updateOrder = async (req, res, next) => {
     const orderId = Number(req.params.id);
-    const { nama,
+    const {
+        nama,
         tanggal_lahir,
         kewarganegaraan,
         ktp_pasport,
@@ -149,7 +149,7 @@ const updateOrder = async (req, res, next) => {
 
     if (!orderId) {
         return res.status(400).json({
-            status: 400,
+            status: false,
             message: "Bad Request"
         });
     }
@@ -165,7 +165,6 @@ const updateOrder = async (req, res, next) => {
 
     try {
         const updatedOrder = await prisma.order.update({
-            where: { id: orderId },
             data: {
                 nama,
                 tanggal_lahir,
@@ -182,9 +181,13 @@ const updateOrder = async (req, res, next) => {
                 },
                 user: {
                     connect: {
-                        id: 2
+                        id: req.user.id
                     }
                 }
+            },
+            where: {
+                id: orderId,
+                userId: req.user.id
             }
         });
 
@@ -204,18 +207,35 @@ const updateOrder = async (req, res, next) => {
  * @param {import("express").NextFunction} next
  */
 const deleteOrder = async (req, res, next) => {
-    const orderId = Number(req.params.id);
-
     try {
+        const orderId = Number(req.params.id);
+
+        const exists = await prisma.order.findUnique({
+            where: {
+                id: orderId,
+                userId: req.user.id
+            }
+        });
+
+        if (!exists) {
+            return res.status(404).json({
+                status: false,
+                message: "Order Not Found"
+            });
+        }
+
         if (!orderId) {
             return res.status(400).json({
-                status: 400,
+                status: false,
                 message: "Bad Request"
             });
         }
 
         await prisma.order.delete({
-            where: { id: orderId }
+            where: {
+                id: orderId,
+                userId: req.user.id
+            }
         });
 
         return res.status(200).json({
