@@ -84,6 +84,7 @@ enum Plane_Status {
     Boarding
     Cancelled
     Arrived
+    Ready
 }
 
 model Airline {
@@ -139,7 +140,13 @@ model Schedule {
 model Ticket {
     id         Int      @id @default(autoincrement())
     kelas      String
-    price      Int
+    harga      Int
+    bagasi     Boolean  @default(false)
+    makanan    Boolean  @default(false)
+    hiburan    Boolean  @default(false)
+    wifi       Boolean  @default(false)
+    usb        Boolean  @default(false)
+    jumlah     Int      @default(0)
     schedule   Schedule @relation(fields: [scheduleId], references: [id])
     scheduleId Int
     Order      Order[]
@@ -178,7 +185,7 @@ model Order_Items {
 
 model Checkout {
     id                  Int                  @id @default(autoincrement())
-    metode_pembayaran   String?
+    metode_pembayaran   String
     is_payment          Boolean              @default(false)
     total               Int
     tanggal_waktu       DateTime?            @db.Timestamptz()
