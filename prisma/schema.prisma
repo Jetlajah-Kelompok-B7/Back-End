@@ -185,7 +185,7 @@ model Order_Items {
 
 model Checkout {
     id                  Int                  @id @default(autoincrement())
-    metode_pembayaran   String
+    metode_pembayaran   String?
     is_payment          Boolean              @default(false)
     total               Int
     tanggal_waktu       DateTime?            @db.Timestamptz()
