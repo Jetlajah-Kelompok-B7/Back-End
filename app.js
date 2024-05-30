@@ -17,7 +17,7 @@ app.get("/", (req, res, next) => {
         next(error);
     }
 });
-app.use("/api/v1", api);
+app.use("/api", api);
 
 app.use((err, req, res, next) => {
     res.status(500).json({ err: err.message });
