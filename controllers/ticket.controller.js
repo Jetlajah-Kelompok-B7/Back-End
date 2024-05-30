@@ -1,12 +1,13 @@
 const { PrismaClient } = require('@prisma/client')
 const { paginationUtils } = require('../utils/pagination')
+const { toBoolean } = require('../utils/toBoolean')
 const prisma = new PrismaClient()
 
 module.exports = {
     getAllTickets: async (req, res, next) => {
         try {
 
-            const { bandara_keberangkatan, bandara_kedatangan, tanggal_pergi, tanggal_pulang, kelas } = req.query;
+            const { bandara_keberangkatan, bandara_kedatangan, tanggal_pergi, tanggal_pulang, kelas, bagasi, hiburan, makanan, wifi, usb, min_harga, max_harga, no_transit } = req.query;
     
             const ticketsTotal = await prisma.ticket.count({
                 where: {
@@ -18,11 +19,35 @@ module.exports = {
                 }
             })
 
+            const priceFilter = {};
+            if (min_harga !== undefined) {
+                priceFilter.gte = parseFloat(min_harga);
+            }
+            if (max_harga !== undefined) {
+                priceFilter.lte = parseFloat(max_harga);
+            }
+
             const pagination = paginationUtils(req.query.page, req.query.page_size, ticketsTotal)
+
+            let transitStatus = undefined;
+
+            if(toBoolean(no_transit)) {
+                transitStatus = {
+                    Transit: {
+                        none: {}
+                    }
+                }
+            }
 
             let tickets = await prisma.ticket.findMany({
                 where: {
                     kelas: kelas,
+                    bagasi: toBoolean(bagasi),
+                    hiburan: toBoolean(hiburan),
+                    makanan: toBoolean(makanan),
+                    wifi: toBoolean(wifi),
+                    usb: toBoolean(usb),
+                    ...(Object.keys(priceFilter).length > 0 && { harga: priceFilter }),
                     schedule: {
                         flight: {
                             status: "Ready",
@@ -31,7 +56,8 @@ module.exports = {
                             },
                             bandara_kedatangan: {
                                 kode_bandara: bandara_kedatangan
-                            }
+                            },
+                            ...transitStatus
                         },
                         keberangkatan: tanggal_pergi,
                         kedatangan: tanggal_pulang
@@ -40,7 +66,8 @@ module.exports = {
                 select: {
                     id: true,
                     kelas: true,
-                    price: true,
+                    harga: true,
+                    jumlah: true,
                     schedule: {
                         select: {
                             keberangkatan: true,
@@ -91,8 +118,9 @@ module.exports = {
             const data = tickets.map(ticket => {
                 return {
                     class: ticket.kelas,
-                    price: ticket.price,
+                    price: ticket.harga,
                     status: ticket.schedule.flight.status,
+                    jumlah: ticket.jumlah,
                     schedule: {
                         takeoff: {
                             time: ticket.schedule.keberangkatan,
