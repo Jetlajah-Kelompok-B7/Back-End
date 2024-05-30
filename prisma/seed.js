@@ -133,7 +133,8 @@ const prisma = new PrismaClient();
                                         create: [
                                             {
                                                 kelas: "Economy",
-                                                price: 1000000,
+                                                harga: 1000000,
+                                                jumlah: 47,
                                                 Order: {
                                                     create: [
                                                         {
@@ -186,7 +187,8 @@ const prisma = new PrismaClient();
                                             },
                                             {
                                                 kelas: "Business",
-                                                price: 2000000,
+                                                harga: 2000000,
+                                                jumlah: 47,
                                                 Order: {
                                                     create: [
                                                         {

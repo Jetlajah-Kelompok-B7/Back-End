@@ -138,15 +138,22 @@ model Schedule {
 }
 
 model Ticket {
-    id         Int      @id @default(autoincrement())
-    kelas      String
-    price      Int
-    schedule   Schedule @relation(fields: [scheduleId], references: [id])
-    scheduleId Int
-    Order      Order[]
+    id              Int      @id @default(autoincrement())
+    kelas           String
+    harga           Int
+    bagasi          Boolean  @default(false)
+    makanan         Boolean  @default(false)
+    hiburan         Boolean  @default(false)
+    wifi            Boolean  @default(false)
+    usb             Boolean  @default(false)
+    jumlah          Int      @default(0)
+    schedule        Schedule @relation(fields: [scheduleId], references: [id])
+    scheduleId      Int
+    Order           Order[]
 
     @@map("tickets")
 }
+
 
 model Order {
     id       Int          @id @default(autoincrement())
