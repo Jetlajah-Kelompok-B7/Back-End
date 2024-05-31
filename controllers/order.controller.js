@@ -29,8 +29,22 @@ const createOrder = async (req, res, next) => {
             }
         });
 
+        const users = await prisma.user.findUnique({
+            where: {
+                id: req.user.id
+            }
+        });
+
+        if (!users) {
+            return res.status(401).json({
+                status: false,
+                message: "Users not found"
+            });
+        }
+
         const randomIndex = Math.floor(Math.random() * tickets.length);
         const randomTicketId = tickets[randomIndex].id;
+        const tanggal_waktu = new Date();
 
         const newOrder = await prisma.order.create({
             data: {
@@ -44,7 +58,20 @@ const createOrder = async (req, res, next) => {
                 },
                 user: {
                     connect: {
-                        id: req.user.id
+                        id: users.id
+                    }
+                }
+            }
+        });
+
+        await prisma.notification.create({
+            data: {
+                judul: "Order Created",
+                deskripsi: "Your order has been created successfully. Please confirm the payment to proceed.",
+                tanggal_waktu,
+                user: {
+                    connect: {
+                        id: users.id
                     }
                 }
             }
@@ -67,13 +94,26 @@ const createOrder = async (req, res, next) => {
  */
 const listOrders = async (req, res, next) => {
     try {
+        const users = await prisma.user.findUnique({
+            where: {
+                id: req.user.id
+            }
+        });
+
+        if (!users) {
+            return res.status(401).json({
+                status: false,
+                message: "Users not found"
+            });
+        }
+
         const orders = await prisma.order.findMany({
             include: {
                 ticket: true,
                 user: true
             },
             where: {
-                userId: req.user.id
+                userId: users.id
             }
         });
 
@@ -114,8 +154,7 @@ const getOrder = async (req, res, next) => {
         if (!order) {
             return res.status(404).json({
                 status: false,
-                message: "Order not found",
-                data: null
+                message: "Order not found"
             });
         }
 
@@ -160,6 +199,19 @@ const updateOrder = async (req, res, next) => {
         }
     });
 
+    const users = await prisma.user.findUnique({
+        where: {
+            id: req.user.id
+        }
+    });
+
+    if (!users) {
+        return res.status(401).json({
+            status: false,
+            message: "Users not found"
+        });
+    }
+
     const randomIndex = Math.floor(Math.random() * tickets.length);
     const randomTicketId = tickets[randomIndex].id;
 
@@ -181,13 +233,13 @@ const updateOrder = async (req, res, next) => {
                 },
                 user: {
                     connect: {
-                        id: req.user.id
+                        id: users.id
                     }
                 }
             },
             where: {
                 id: orderId,
-                userId: req.user.id
+                userId: users.id
             }
         });
 
@@ -210,10 +262,30 @@ const deleteOrder = async (req, res, next) => {
     try {
         const orderId = Number(req.params.id);
 
+        if (!orderId) {
+            return res.status(400).json({
+                status: false,
+                message: "Bad Request"
+            });
+        }
+
+        const users = await prisma.user.findUnique({
+            where: {
+                id: req.user.id
+            }
+        });
+
+        if (!users) {
+            return res.status(401).json({
+                status: false,
+                message: "Users not found"
+            });
+        }
+
         const exists = await prisma.order.findUnique({
             where: {
                 id: orderId,
-                userId: req.user.id
+                userId: users.id
             }
         });
 
@@ -224,17 +296,10 @@ const deleteOrder = async (req, res, next) => {
             });
         }
 
-        if (!orderId) {
-            return res.status(400).json({
-                status: false,
-                message: "Bad Request"
-            });
-        }
-
         await prisma.order.delete({
             where: {
                 id: orderId,
-                userId: req.user.id
+                userId: users.id
             }
         });
 

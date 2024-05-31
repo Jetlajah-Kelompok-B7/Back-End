@@ -17,9 +17,25 @@ const createCheckout = async (req, res, next) => {
             });
         }
 
+        const users = await prisma.user.findUnique({
+            where: {
+                id: req.user.id
+            }
+        });
+
+        if (!users) {
+            return res.status(401).json({
+                status: false,
+                message: "Users not found"
+            });
+        }
+
         const exists = await prisma.checkout.findUnique({
             where: {
-                orderId: orderParams
+                orderId: orderParams,
+                order: {
+                    userId: users.id
+                }
             }
         });
 
@@ -40,7 +56,7 @@ const createCheckout = async (req, res, next) => {
             },
             where: {
                 id: orderParams,
-                userId: 2
+                userId: users.id
             }
         });
 
@@ -111,8 +127,7 @@ const getCheckout = async (req, res, next) => {
         if (!checkout) {
             return res.status(404).json({
                 status: false,
-                message: "Checkout not found",
-                data: null
+                message: "Checkout not found"
             });
         }
 
@@ -132,32 +147,70 @@ const getCheckout = async (req, res, next) => {
  * @param {import("express").NextFunction} next
  */
 const confirmCheckout = async (req, res, next) => {
-    const checkoutId = Number(req.params.id);
+    const orderId = Number(req.params.id);
     const {
-        orderId,
         metode_pembayaran
     } = req.body;
 
     try {
-        const tanggal_waktu = Date.now();
-        const updatedCheckout = await prisma.checkout.update({
-            where: { id: checkoutId },
-            data: {
-                metode_pembayaran,
-                tanggal_waktu,
-                is_payment: true,
-                Order: { connect: { id: orderId } }
+        if (!metode_pembayaran) {
+            return res.status(400).json({
+                status: false,
+                message: "Bad Request"
+            });
+        }
+
+        const users = await prisma.user.findUnique({
+            where: {
+                id: req.user.id
             }
         });
 
-        await prisma.history_Transaction.update({
-            where: { checkoutId: checkoutId },
-            data: { tanggal_waktu }
+        if (!users) {
+            return res.status(401).json({
+                status: false,
+                message: "Users not found"
+            });
+        }
+
+        const tanggal_waktu = new Date();
+        const updatedCheckout = await prisma.checkout.update({
+            data: {
+                metode_pembayaran,
+                tanggal_waktu,
+                is_payment: true
+            },
+            where: {
+                orderId: orderId
+            }
+        });
+
+        await prisma.history_Transaction.create({
+            data: {
+                checkout: {
+                    connect: {
+                        id: updatedCheckout.id
+                    }
+                }
+            }
+        });
+
+        await prisma.notification.create({
+            data: {
+                judul: "Order successfully paid",
+                deskripsi: "Your ticket order has been successfully paid. Thank you for your purchase!",
+                tanggal_waktu,
+                user: {
+                    connect: {
+                        id: users.id
+                    }
+                }
+            }
         });
 
         return res.status(201).json({
             status: true,
-            message: "Checkout and History Transaction updated successfully",
+            message: "Your ticket order has been successfully paid. Thank you for your purchase!",
             data: updatedCheckout
         });
     } catch (error) {

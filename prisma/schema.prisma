@@ -207,6 +207,8 @@ model History_Transaction {
     id         Int      @id @default(autoincrement())
     checkout   Checkout @relation(fields: [checkoutId], references: [id])
     checkoutId Int      @unique
+
+    @@map("history_transactions")
 }
 
 model Transit {
