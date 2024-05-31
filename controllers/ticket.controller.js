@@ -9,16 +9,6 @@ module.exports = {
 
             const { bandara_keberangkatan, bandara_kedatangan, tanggal_pergi, tanggal_pulang, kelas, bagasi, hiburan, makanan, wifi, usb, min_harga, max_harga, no_transit } = req.query;
     
-            const ticketsTotal = await prisma.ticket.count({
-                where: {
-                    schedule: {
-                        flight: {
-                            status: "Ready"
-                        }
-                    }
-                }
-            })
-
             const priceFilter = {};
             if (min_harga !== undefined) {
                 priceFilter.gte = parseFloat(min_harga);
@@ -26,8 +16,6 @@ module.exports = {
             if (max_harga !== undefined) {
                 priceFilter.lte = parseFloat(max_harga);
             }
-
-            const pagination = paginationUtils(req.query.page, req.query.page_size, ticketsTotal)
 
             let transitStatus = undefined;
 
@@ -38,6 +26,34 @@ module.exports = {
                     }
                 }
             }
+
+            const ticketsTotal = await prisma.ticket.count({
+                where: {
+                    kelas: kelas,
+                    bagasi: toBoolean(bagasi),
+                    hiburan: toBoolean(hiburan),
+                    makanan: toBoolean(makanan),
+                    wifi: toBoolean(wifi),
+                    usb: toBoolean(usb),
+                    ...(Object.keys(priceFilter).length > 0 && { harga: priceFilter }),
+                    schedule: {
+                        flight: {
+                            status: "Ready",
+                            bandara_keberangkatan: {
+                                kode_bandara: bandara_keberangkatan
+                            },
+                            bandara_kedatangan: {
+                                kode_bandara: bandara_kedatangan
+                            },
+                            ...transitStatus
+                        },
+                        keberangkatan: tanggal_pergi,
+                        kedatangan: tanggal_pulang
+                    }
+                }
+            })
+
+            const pagination = paginationUtils(req.query.page, req.query.page_size, ticketsTotal)
 
             let tickets = await prisma.ticket.findMany({
                 where: {
@@ -155,6 +171,7 @@ module.exports = {
                 status: true,
                 message: 'Tickets retrieved successfully',
                 data: data,
+                pagination: pagination
             })
         } catch (error) {
             next(error)
