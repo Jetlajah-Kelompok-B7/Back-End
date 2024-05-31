@@ -211,6 +211,20 @@ const forgotPin = async (req, res, next) => {
             }
         });
 
+        const tanggal_waktu = new Date();
+        await prisma.notification.create({
+            data: {
+                judul: "Pin updated",
+                deskripsi: "Your PIN has been updated successfully",
+                tanggal_waktu,
+                user: {
+                    connect: {
+                        id: users.id
+                    }
+                }
+            }
+        });
+
         return res.status(201).json({
             status: true,
             message: "Created",
