@@ -1,9 +1,11 @@
-const express = require('express');
-const router  = express.Router()
-const controller = require('../controllers/checkout.controller');
+const app = require("express").Router();
+const { createCheckout, deleteCheckout, getCheckout, listCheckouts, confirmCheckout } = require("../controllers/checkout.controller");
+const { restrict } = require("../middlewares/middleware");
 
-router.post('/', controller.createCheckout);
-router.get('/', controller.listCheckouts);
-router.get('/:id', controller.getCheckout);
+app.get("/", restrict, listCheckouts);
+app.post("/:id", restrict, createCheckout);
+app.post("/:id/pay", restrict, confirmCheckout);
+app.get("/:id", restrict, getCheckout);
+app.delete("/:id", restrict, deleteCheckout);
 
-module.exports = router;
+module.exports = app;

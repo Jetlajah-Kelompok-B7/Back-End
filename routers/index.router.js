@@ -1,11 +1,12 @@
-const express = require('express');
-const router  = express.Router()
-const checkout = require('./checkout.router');
-const order = require('./order.router');
-const history = require('./history.router');
+const app = require("express").Router();
+const checkout = require("./checkout.router");
+const order = require("./order.router");
+const history = require("./history.router");
+const auth = require("./auth.router");
+const user = require("./user.router");
 const ticket = require('./ticket.router');
 
-router.get('/', (req, res) => {
+app.get("/", (req, res) => {
     res.status(200).json({
         status: true,
         message: "Connected",
@@ -13,9 +14,11 @@ router.get('/', (req, res) => {
     });
 });
 
-router.use('/checkout', checkout);
-router.use('/order', order);
-router.use('/history', history);
+app.use("/", auth);
+app.use("/user", user);
+app.use("/checkout", checkout);
+app.use("/order", order);
+app.use("/history", history);
 router.use('/ticket', ticket);
 
-module.exports = router
+module.exports = app;

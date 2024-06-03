@@ -1,143 +1,253 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-module.exports = {
-    createCheckout: async (req, res, next) => {
-        let { 
-            metode_pembayaran,
-            is_payment,
-            total,
-            tanggal_waktu, } = req.body;
+/**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
+const createCheckout = async (req, res, next) => {
+    const orderParams = Number(req.params.id);
 
-        try {
-            const newCheckout = await prisma.checkout.create({
-                data: {
-                    metode_pembayaran,
-                    is_payment,
-                    total,
-                    tanggal_waktu,
-                    order: { connect: { id: orderId } },
-                    History_Transaction: {
-                        create: {
-                            tanggal_waktu,
-                        },
-                    },
-                },
+    try {
+        if (!orderParams) {
+            return res.status(400).json({
+                status: false,
+                message: "Bad Request"
             });
-
-            res.status(201).json({
-                status: true,
-                message: 'Checkout and History Transaction created successfully',
-                data: newCheckout,
-            });
-        } catch (error) {
-            next(error);
         }
-    },
 
-    listCheckouts: async (req, res, next) => {
-        try {
-            let checkouts = await prisma.checkout.findMany({
-                include: {
-                    order: true,
-                    History_Transaction: true,
-                },
-            });
-
-            res.status(200).json({
-                status: true,
-                message: 'Checkouts retrieved successfully',
-                data: checkouts,
-            });
-        } catch (error) {
-            next(error);
-        }
-    },
-
-    getCheckout: async (req, res, next) => {
-        let checkoutId = Number(req.params.id);
-
-        try {
-            const checkout = await prisma.checkout.findUnique({
-                where: { id: checkoutId },
-                include: {
-                    order: true,
-                    History_Transaction: true,
-                },
-            });
-
-            if (!checkout) {
-                return res.status(404).json({
-                    status: false,
-                    message: "Checkout not found",
-                    data: null,
-                });
+        const users = await prisma.user.findUnique({
+            where: {
+                id: req.user.id
             }
+        });
 
-            res.status(200).json({
-                status: true,
-                message: 'Checkout retrieved successfully',
-                data: checkout,
+        if (!users) {
+            return res.status(401).json({
+                status: false,
+                message: "Users not found"
             });
-        } catch (error) {
-            next(error);
         }
-    },
 
-    updateCheckout: async (req, res, next) => {
-        const checkoutId = Number(req.params.id);
-        let { 
-            metode_pembayaran, 
-            is_payment, 
-            total, 
-            tanggal_waktu, 
-            orderId } = req.body;
+        const exists = await prisma.checkout.findUnique({
+            where: {
+                orderId: orderParams,
+                order: {
+                    userId: users.id
+                }
+            }
+        });
 
-        try {
-            const updatedCheckout = await prisma.checkout.update({
-                where: { id: checkoutId },
-                data: {
-                    metode_pembayaran,
-                    is_payment,
-                    total,
-                    tanggal_waktu,
-                    order: { connect: { id: orderId } },
-                },
+        if (exists) {
+            return res.status(400).json({
+                status: false,
+                message: "Bad Request"
             });
-
-            await prisma.history_Transaction.update({
-                where: { checkoutId: checkoutId },
-                data: { tanggal_waktu },
-            });
-
-            res.status(200).json({
-                status: true,
-                message: 'Checkout and History Transaction updated successfully',
-                data: updatedCheckout,
-            });
-        } catch (error) {
-            next(error);
         }
-    },
 
-    deleteCheckout: async (req, res, next) => {
-        const checkoutId = Number(req.params.id);
+        const order = await prisma.order.findMany({
+            include: {
+                ticket: {
+                    select: {
+                        harga: true
+                    }
+                }
+            },
+            where: {
+                id: orderParams,
+                userId: users.id
+            }
+        });
 
-        try {
-            await prisma.history_Transaction.deleteMany({
-                where: { checkoutId: checkoutId },
+        const total = order.reduce((acc, curr) => acc + curr.ticket.harga, 0);
+
+        const newCheckout = await prisma.checkout.create({
+            data: {
+                total: total,
+                order: {
+                    connect: {
+                        id: orderParams
+                    }
+                }
+            }
+        });
+
+        return res.status(201).json({
+            status: true,
+            message: "Checkout successfully created",
+            data: newCheckout
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
+const listCheckouts = async (req, res, next) => {
+    try {
+        const checkouts = await prisma.checkout.findMany({
+            include: {
+                Order: true,
+                History_Transaction: true
+            }
+        });
+
+        return res.status(200).json({
+            status: true,
+            message: "Checkouts retrieved successfully",
+            data: checkouts
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
+const getCheckout = async (req, res, next) => {
+    const checkoutId = Number(req.params.id);
+
+    try {
+        const checkout = await prisma.checkout.findUnique({
+            where: { id: checkoutId },
+            include: {
+                Order: true,
+                History_Transaction: true
+            }
+        });
+
+        if (!checkout) {
+            return res.status(404).json({
+                status: false,
+                message: "Checkout not found"
             });
-
-            await prisma.checkout.delete({
-                where: { id: checkoutId },
-            });
-
-            res.status(200).json({
-                status: true,
-                message: 'Checkout and corresponding History Transaction deleted successfully',
-            });
-        } catch (error) {
-            next(error);
         }
-    },
+
+        return res.status(200).json({
+            status: true,
+            message: "Checkout retrieved successfully",
+            data: checkout
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
+const confirmCheckout = async (req, res, next) => {
+    const orderId = Number(req.params.id);
+    const {
+        metode_pembayaran
+    } = req.body;
+
+    try {
+        if (!metode_pembayaran) {
+            return res.status(400).json({
+                status: false,
+                message: "Bad Request"
+            });
+        }
+
+        const users = await prisma.user.findUnique({
+            where: {
+                id: req.user.id
+            }
+        });
+
+        if (!users) {
+            return res.status(401).json({
+                status: false,
+                message: "Users not found"
+            });
+        }
+
+        const tanggal_waktu = new Date();
+        const updatedCheckout = await prisma.checkout.update({
+            data: {
+                metode_pembayaran,
+                tanggal_waktu,
+                is_payment: true
+            },
+            where: {
+                orderId: orderId
+            }
+        });
+
+        await prisma.history_Transaction.create({
+            data: {
+                checkout: {
+                    connect: {
+                        id: updatedCheckout.id
+                    }
+                }
+            }
+        });
+
+        await prisma.notification.create({
+            data: {
+                judul: "Order successfully paid",
+                deskripsi: "Your ticket order has been successfully paid. Thank you for your purchase!",
+                tanggal_waktu,
+                user: {
+                    connect: {
+                        id: users.id
+                    }
+                }
+            }
+        });
+
+        return res.status(201).json({
+            status: true,
+            message: "Your ticket order has been successfully paid. Thank you for your purchase!",
+            data: updatedCheckout
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
+const deleteCheckout = async (req, res, next) => {
+    const checkoutId = Number(req.params.id);
+
+    try {
+        await prisma.history_Transaction.deleteMany({
+            where: { checkoutId: checkoutId }
+        });
+
+        await prisma.checkout.delete({
+            where: { id: checkoutId }
+        });
+
+        return res.status(200).json({
+            status: true,
+            message: "Checkout and corresponding History Transaction deleted successfully"
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+module.exports = {
+    createCheckout,
+    listCheckouts,
+    getCheckout,
+    confirmCheckout,
+    deleteCheckout
 };
