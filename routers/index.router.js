@@ -19,6 +19,6 @@ app.use("/user", user);
 app.use("/checkout", checkout);
 app.use("/order", order);
 app.use("/history", history);
-router.use('/ticket', ticket);
+app.use('/ticket', ticket);
 
 module.exports = app;
