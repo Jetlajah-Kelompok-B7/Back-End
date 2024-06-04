@@ -12,7 +12,7 @@ const register = async (req, res, next) => {
     try {
         const { nama, email, password, no_telp } = req.body;
 
-        if (!nama || !email || !password || no_telp) {
+        if (!nama || !email || !password || !no_telp) {
             return res.status(400).json({
                 status: false,
                 message: "Bad Request"
