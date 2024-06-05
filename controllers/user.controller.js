@@ -1,6 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
+const path = require("path");
+const imagekit = require("../middlewares/middleware").imagekit;
 
 /**
  * @param {import("express").Request} req
@@ -33,13 +35,20 @@ const profile = async (req, res, next) => {
  * @param {import("express").NextFunction} next
  */
 const updateProfile = async (req, res, next) => {
-    const { nama, tanggal_lahir, no_telp, alamat, photo_profile, pin } = req.body;
+    const { nama, tanggal_lahir, no_telp, alamat, pin } = req.body;
     try {
+        let image = req.file.buffer.toString("base64");
+
         const users = await prisma.user.findUnique({
             where: {
                 id: req.user.id
             }
         }).Profile();
+
+        let photo_profile = await imagekit.upload({
+            fileName: Date.now() + path.extname(req.file.originalname),
+            file: image
+        });
 
         const profile = await prisma.profile.update({
             data: {
@@ -47,7 +56,7 @@ const updateProfile = async (req, res, next) => {
                 tanggal_lahir: tanggal_lahir ? tanggal_lahir : users.tanggal_lahir,
                 no_telp: no_telp ? no_telp : users.no_telp,
                 alamat: alamat ? alamat : users.alamat,
-                photo_profile: photo_profile ? photo_profile : users.photo_profile,
+                photo_profile: photo_profile ? photo_profile.url : users.photo_profile,
                 pin: pin ? pin : users.pin
             },
             where: {
