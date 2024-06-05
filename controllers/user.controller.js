@@ -2,7 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
 const path = require("path");
-const imagekit = require("../middlewares/imagekit");
+const imagekit = require("../middlewares/middleware").imagekit;
 
 /**
  * @param {import("express").Request} req
