@@ -1,5 +1,11 @@
 const jwt = require("jsonwebtoken");
+const passport = require("../libs/passport");
 
+/**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
 const restrict = (req, res, next) => {
     try {
         const { authorization } = req.headers;
@@ -27,6 +33,18 @@ const restrict = (req, res, next) => {
     }
 };
 
+const authGoogle = passport.authenticate("google", {
+    scope: ["email", "profile"],
+    prompt: "select_account"
+});
+
+const authGoogleCallback = passport.authenticate("google", {
+    failureRedirect: "/api/login/google",
+    session: false
+});
+
 module.exports = {
+    authGoogle,
+    authGoogleCallback,
     restrict
 };

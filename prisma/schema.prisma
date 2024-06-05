@@ -19,6 +19,7 @@ model User {
     password     String
     is_verified  Boolean        @default(false)
     role         Role           @default(USER)
+    googleid     String?
     Profile      Profile?
     Notification Notification[]
     Order        Order[]
