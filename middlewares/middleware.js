@@ -1,11 +1,9 @@
 const jwt = require("jsonwebtoken");
+const passport = require("../libs/passport");
 const path = require("path");
 const multer = require("multer");
 const imagekit = require("imagekit");
-const { 
-    IMAGEKIT_PUBLIC_KEY, 
-    IMAGEKIT_PRIVATE_KEY, 
-    IMAGEKIT_ENDPOINT_URL } = process.env;
+const { IMAGEKIT_PUBLIC_KEY, IMAGEKIT_PRIVATE_KEY, IMAGEKIT_ENDPOINT_URL } = process.env;
 
 const imagekitInstance = new imagekit({
     publicKey: IMAGEKIT_PUBLIC_KEY,
@@ -13,17 +11,12 @@ const imagekitInstance = new imagekit({
     urlEndpoint: IMAGEKIT_ENDPOINT_URL
 });
 
-const file_name = (req, file, callback) => {
-    let fileName = Date.now() + path.extname(file.originalname);
-    callback(null, fileName);
-};
-
 const generateFileFilter = (mimetypes) => {
     return (req, file, callback) => {
         if (mimetypes.includes(file.mimetype)) {
             callback(null, true);
         } else {
-            let error = new Error(`Only ${mimetypes} are allowed to upload!`);
+            const error = new Error(`Only ${mimetypes} are allowed to upload!`);
             callback(error, false);
         }
     };
@@ -31,16 +24,20 @@ const generateFileFilter = (mimetypes) => {
 
 const upload = multer({
     fileFilter: generateFileFilter([
-        'image/jpg',
-        'image/png',
-        'image/jpeg'
+        "image/jpg",
+        "image/png",
+        "image/jpeg"
     ]),
     onError: (error, next) => {
         next(error);
     }
 });
-    
 
+/**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
 const restrict = (req, res, next) => {
     try {
         const { authorization } = req.headers;
@@ -68,9 +65,20 @@ const restrict = (req, res, next) => {
     }
 };
 
+const authGoogle = passport.authenticate("google", {
+    scope: ["email", "profile"],
+    prompt: "select_account"
+});
+
+const authGoogleCallback = passport.authenticate("google", {
+    failureRedirect: "/api/login/google",
+    session: false
+});
 
 module.exports = {
     imagekit: imagekitInstance,
     upload,
+    authGoogle,
+    authGoogleCallback,
     restrict
 };
