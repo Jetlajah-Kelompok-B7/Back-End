@@ -2,6 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { transporter } = require("../utils/transporter");
 
 /**
  * @param {import("express").Request} req
@@ -41,6 +42,25 @@ const register = async (req, res, next) => {
                     }
                 }
             }
+        });
+
+        const token = jwt.sign(user.id, process.env.JWT_SECRET);
+
+        await transporter.sendMail({
+            from: `"${process.env.EMAIL_USERNAME}" <${process.env.EMAIL}>`,
+            to: email.toString(),
+            subject: "Email Verification",
+            text: "Please verify your email address by clicking the link below.",
+            html: `
+                <div style="font-family: Arial, sans-serif; color: #333;">
+                <h2>Email Verification</h2>
+                <p>Please verify your email address by clicking the link below:</p>
+                <a href="${req.protocol}://${req.get('host')}/api/verif-email?token=${token}" style="color: #1a73e8;">Verify Email</a>
+                <br/><br/>
+                <p>If you did not request this, please ignore this email.</p>
+                <p>Thank you!</p>
+                </div>
+            `,
         });
 
         delete user.password;
@@ -252,11 +272,51 @@ const whoami = async (req, res, next) => {
     }
 };
 
+const verifEmail = async (req, res, next) => {
+    try {
+        const { token } = req.query;
+        const userId = parseInt(jwt.verify(token, process.env.JWT_SECRET));
+        const checkUser = await prisma.user.findFirst({
+            where: {
+                id: userId
+            }, 
+            include: {
+                Profile: true
+            }
+        });
+
+        if(checkUser.is_verified){
+            return res.render("error", { message: "Akun email anda telah terverifikasi! Silahkan langsung masuk ke halaman web Jetlajah.in" });
+        }
+    
+        if (!checkUser) {
+          return res.status(404).json({
+            status: false,
+            message: "User not found"
+          });
+        }
+    
+        await prisma.user.update({
+          where: {
+            id: userId
+          },
+          data: {
+            is_verified: true
+          }
+        });
+        
+        return res.render("verif-email-success", { name: checkUser.Profile.nama });
+    } catch (err) {
+        return res.render("error", { message: "Silahkan cek kembali link yang anda akses!" });
+    }
+}
+
 module.exports = {
     register,
     login,
     whoami,
     createPin,
     forgotPin,
-    pinValidation
+    pinValidation,
+    verifEmail
 };
