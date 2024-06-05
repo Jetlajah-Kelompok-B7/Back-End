@@ -36,16 +36,16 @@ const profile = async (req, res, next) => {
  */
 const updateProfile = async (req, res, next) => {
     const { nama, tanggal_lahir, no_telp, alamat, pin } = req.body;
-    try {
-        let image = req.file.buffer.toString("base64");
+    const image = req.file?.buffer?.toString("base64");
 
+    try {
         const users = await prisma.user.findUnique({
             where: {
                 id: req.user.id
             }
         }).Profile();
 
-        let photo_profile = await imagekit.upload({
+        const photo_profile = imagekit.upload({
             fileName: Date.now() + path.extname(req.file.originalname),
             file: image
         });
