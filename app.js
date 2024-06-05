@@ -2,17 +2,20 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const logger = require("morgan");
+const cors = require("cors");
 
 const port = 3000;
 const api = require("./routers/index.router");
 
+app.set("view engine", "ejs");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(logger("dev"));
+app.use(cors());
 
 app.get("/", (req, res, next) => {
     try {
-        return res.json({ status: 200, message: "OK" });
+        return res.json({ status: true, message: "OK", data: "/api" });
     } catch (error) {
         next(error);
     }
