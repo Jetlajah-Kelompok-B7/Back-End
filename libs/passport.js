@@ -8,7 +8,6 @@ const prisma = new PrismaClient();
  * @param {string} refreshToken
  * @param {import("passport-google-oauth20").Profile} profile
  * @param {import("passport-google-oauth20").VerifyCallback} done
- * @param {import("express").Response} res
  */
 const callbackPassport = async (accessToken, refreshToken, profile, done) => {
     try {
