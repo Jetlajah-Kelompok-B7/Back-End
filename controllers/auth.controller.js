@@ -229,6 +229,13 @@ const forgotPin = async (req, res, next) => {
             }
         });
 
+        if (!password || !pin) {
+            return res.status(400).json({
+                status: false,
+                message: "Bad Request"
+            });
+        }
+
         const passwordCorrect = bcrypt.compare(password, users.password);
 
         if (!passwordCorrect) {
