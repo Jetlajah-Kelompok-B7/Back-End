@@ -10,7 +10,7 @@ app.post("/create-pin", restrict, createPin);
 app.put("/forgot-pin", restrict, forgotPin);
 app.post("/pin-validation", restrict, pinValidation);
 app.post("/request-reset-password", requestResetPassword);
-app.post("/reset-password", resetPassword);
+app.put("/reset-password", resetPassword);
 app.get("/forgot-password", forgotPasswordView);
 app.get("/reset-password", resetPasswordView);
 app.get("/verif-email", verifEmail);
