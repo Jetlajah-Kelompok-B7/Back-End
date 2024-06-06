@@ -63,12 +63,12 @@ const register = async (req, res, next) => {
                 <div style="font-family: Arial, sans-serif; color: #333;">
                 <h2>Email Verification</h2>
                 <p>Please verify your email address by clicking the link below:</p>
-                <a href="${req.protocol}://${req.get('host')}/api/verif-email?token=${token}" style="color: #1a73e8;">Verify Email</a>
+                <a href="${req.protocol}://${req.get("host")}/api/verif-email?token=${token}" style="color: #1a73e8;">Verify Email</a>
                 <br/><br/>
                 <p>If you did not request this, please ignore this email.</p>
                 <p>Thank you!</p>
                 </div>
-            `,
+            `
         });
 
         delete user.password;
@@ -138,7 +138,11 @@ const createPin = async (req, res, next) => {
     try {
         const { pin } = req.body;
 
-        const user = await prisma.user.findFirst({ where: { email: req.user.email } });
+        const user = await prisma.user.findFirst({
+            where: {
+                email: req.user.email
+            }
+        });
 
         if (!user) {
             return res.status(401).json({
@@ -149,10 +153,10 @@ const createPin = async (req, res, next) => {
 
         await prisma.profile.upsert({
             create: {
-                pin
+                pin: Number(pin)
             },
             update: {
-                pin
+                pin: Number(pin)
             },
             where: {
                 userId: user.id
@@ -442,37 +446,37 @@ const verifEmail = async (req, res, next) => {
         const checkUser = await prisma.user.findFirst({
             where: {
                 id: userId
-            }, 
+            },
             include: {
                 Profile: true
             }
         });
 
-        if(checkUser.is_verified){
+        if (checkUser.is_verified) {
             return res.render("error", { message: "Akun email anda telah terverifikasi! Silahkan langsung masuk ke halaman web Jetlajah.in" });
         }
-    
+
         if (!checkUser) {
-          return res.status(404).json({
-            status: false,
-            message: "User not found"
-          });
+            return res.status(404).json({
+                status: false,
+                message: "User not found"
+            });
         }
-    
+
         await prisma.user.update({
-          where: {
-            id: userId
-          },
-          data: {
-            is_verified: true
-          }
+            where: {
+                id: userId
+            },
+            data: {
+                is_verified: true
+            }
         });
-        
+
         return res.render("verif-email-success", { name: checkUser.Profile.nama });
     } catch (err) {
         return res.render("error", { message: "Silahkan cek kembali link yang anda akses!" });
     }
-}
+};
 
 module.exports = {
     register,
