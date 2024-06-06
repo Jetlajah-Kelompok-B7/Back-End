@@ -1,6 +1,5 @@
 const jwt = require("jsonwebtoken");
 const passport = require("../libs/passport");
-const path = require("path");
 const multer = require("multer");
 const imagekit = require("imagekit");
 const { IMAGEKIT_PUBLIC_KEY, IMAGEKIT_PRIVATE_KEY, IMAGEKIT_ENDPOINT_URL } = process.env;
