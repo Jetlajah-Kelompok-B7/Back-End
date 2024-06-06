@@ -236,7 +236,7 @@ const forgotPin = async (req, res, next) => {
             });
         }
 
-        const passwordCorrect = bcrypt.compare(password, users.password);
+        const passwordCorrect = await bcrypt.compare(password, users.password);
 
         if (!passwordCorrect) {
             return res.status(401).send({
