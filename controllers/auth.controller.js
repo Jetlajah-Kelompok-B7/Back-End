@@ -319,6 +319,13 @@ const resetPassword = async (req, res, next) => {
         const token = req.query.token;
         const { password, confirmpassword } = req.body;
 
+        if (!password || !confirmpassword) {
+            return res.status(400).json({
+                status: false,
+                message: "Bad Request"
+            });
+        }
+
         if (password !== confirmpassword) {
             return res.status(401).json({
                 status: false,
