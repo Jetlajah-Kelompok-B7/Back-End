@@ -151,11 +151,8 @@ const createPin = async (req, res, next) => {
             });
         }
 
-        await prisma.profile.upsert({
-            create: {
-                pin: Number(pin)
-            },
-            update: {
+        await prisma.profile.update({
+            data: {
                 pin: Number(pin)
             },
             where: {
@@ -236,7 +233,7 @@ const forgotPin = async (req, res, next) => {
 
         const usersPin = await prisma.profile.update({
             data: {
-                pin: pin
+                pin: Number(pin)
             },
             where: {
                 id: users.id
