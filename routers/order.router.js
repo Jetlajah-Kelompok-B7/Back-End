@@ -3,7 +3,7 @@ const { createOrder, getOrder, deleteOrder, listOrders, updateOrder } = require(
 const { restrict } = require("../middlewares/middleware");
 
 app.get("/", restrict, listOrders);
-app.post("/", restrict, createOrder);
+app.post("/:id", restrict, createOrder);
 app.get("/:id", restrict, getOrder);
 app.put("/:id", restrict, updateOrder);
 app.delete("/:id", restrict, deleteOrder);
