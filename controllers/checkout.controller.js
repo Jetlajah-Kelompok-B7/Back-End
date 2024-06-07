@@ -90,10 +90,28 @@ const createCheckout = async (req, res, next) => {
  */
 const listCheckouts = async (req, res, next) => {
     try {
+        const users = await prisma.user.findUnique({
+            where: {
+                id: req.user.id
+            }
+        });
+
+        if (!users) {
+            return res.status(401).json({
+                status: false,
+                message: "Users not found"
+            });
+        }
+
         const checkouts = await prisma.checkout.findMany({
             include: {
-                Order: true,
+                order: true,
                 History_Transaction: true
+            },
+            where: {
+                order: {
+                    userId: users.id
+                }
             }
         });
 
@@ -113,14 +131,39 @@ const listCheckouts = async (req, res, next) => {
  * @param {import("express").NextFunction} next
  */
 const getCheckout = async (req, res, next) => {
-    const checkoutId = Number(req.params.id);
-
     try {
+        const checkoutId = Number(req.params.id);
+
+        if (!checkoutId) {
+            return res.status(400).json({
+                status: false,
+                message: "Bad Request"
+            });
+        }
+
+        const users = await prisma.user.findUnique({
+            where: {
+                id: req.user.id
+            }
+        });
+
+        if (!users) {
+            return res.status(401).json({
+                status: false,
+                message: "Users not found"
+            });
+        }
+
         const checkout = await prisma.checkout.findUnique({
-            where: { id: checkoutId },
             include: {
-                Order: true,
+                order: true,
                 History_Transaction: true
+            },
+            where: {
+                id: checkoutId,
+                order: {
+                    userId: users.id
+                }
             }
         });
 
