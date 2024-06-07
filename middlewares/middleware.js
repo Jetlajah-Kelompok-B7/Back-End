@@ -64,6 +64,17 @@ const restrict = (req, res, next) => {
     }
 };
 
+let isAdmin = (req, res, next) => {
+    if (req.user.role != 'ADMIN') {
+        return res.status(401).json({
+            status: false,
+            message: 'only admin can access!',
+            data: null
+        });
+    }
+    next();
+};
+
 const authGoogle = passport.authenticate("google", {
     scope: ["email", "profile"],
     prompt: "select_account"
@@ -79,5 +90,6 @@ module.exports = {
     upload,
     authGoogle,
     authGoogleCallback,
-    restrict
+    restrict,
+    isAdmin
 };
