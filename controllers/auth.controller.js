@@ -32,14 +32,16 @@ const register = async (req, res, next) => {
 
         const encryptedPassword = await bcrypt.hash(password, 10);
 
-        const user = await prisma.user.create({
-            data: {
-                email,
-                password: encryptedPassword,
-                Profile: {
-                    create: {
-                        nama,
-                        no_telp
+        const user = await prisma.$transaction(async (prisma) => {
+            const newUser = await prisma.user.create({
+                data: {
+                    email,
+                    password: encryptedPassword,
+                    Profile: {
+                        create: {
+                            nama,
+                            no_telp
+                        }
                     }
                 },
                 Notification: {
@@ -49,8 +51,7 @@ const register = async (req, res, next) => {
                         tanggal_waktu: new Date()
                     }
                 }
-            }
-        });
+            });
 
         const token = jwt.sign(user.id, process.env.JWT_SECRET);
 
@@ -71,13 +72,15 @@ const register = async (req, res, next) => {
             `
         });
 
-        delete user.password;
+            delete newUser.password;
 
-        return res.status(201).json({
-            status: true,
-            message: "Created",
-            data: user
-        });
+            return res.status(201).json({
+                status: true,
+                message: "Created",
+                data: newUser
+            });
+
+        }); 
     } catch (error) {
         next(error);
     }
