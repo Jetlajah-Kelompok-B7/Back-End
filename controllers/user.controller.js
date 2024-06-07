@@ -110,8 +110,90 @@ const notification = async (req, res, next) => {
     }
 };
 
+/**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
+const deleteUser = async (req, res, next) => {
+    try {
+        
+        const id = parseInt(req.params.id);
+
+        const users = await prisma.user.findUnique({
+            where: {
+                id
+            }
+        });
+
+        if (!users) {
+            return res.status(404).json({
+                status: false,
+                message: "User not found!"
+            });
+        }
+
+        await prisma.user.delete({
+            where: {
+                id: users.id
+            }
+        });
+
+        return res.status(200).json({
+            status: true,
+            message: "Success to delete user!"
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+const getUsers = async (req, res, next) => {
+    try {
+        const users = await prisma.user.findMany({
+            select: {
+                id: true,
+                email: true,
+                role: true,
+                Profile: {
+                    select: {
+                        nama: true,
+                        tanggal_lahir: true,
+                        no_telp: true,
+                        alamat: true,
+                        photo_profile: true
+                    }
+                }
+            }
+        });
+
+        const data = users.map(user => {
+            return {
+                id: user.id,
+                nama: user.Profile.nama,
+                email: user.email,
+                tanggal_lahir: user.Profile.tanggal_lahir,
+                no_telp: user.Profile.no_telp,
+                alamat: user.Profile.alamat,
+                photo_profile: user.Profile.photo_profile,
+                role: user.role
+            }
+        })
+
+        return res.status(200).json({
+            status: true,
+            message: "OK",
+            data: data
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 module.exports = {
     profile,
     updateProfile,
-    notification
+    notification,
+    deleteUser,
+    getUsers
 };
