@@ -8,11 +8,12 @@ const prisma = new PrismaClient();
  */
 const createOrder = async (req, res, next) => {
     try {
+        const ticketId = Number(req.params.id);
         const { orders } = req.body;
 
         const ordersArr = [];
 
-        if (orders.length > 0) {
+        if (orders.length > 0 && ticketId) {
             orders.forEach((order) => {
                 ordersArr.push(order);
             });
@@ -22,12 +23,6 @@ const createOrder = async (req, res, next) => {
                 message: "Bad Request"
             });
         }
-
-        const tickets = await prisma.ticket.findMany({
-            select: {
-                id: true
-            }
-        });
 
         const users = await prisma.user.findUnique({
             where: {
@@ -42,8 +37,6 @@ const createOrder = async (req, res, next) => {
             });
         }
 
-        const randomIndex = Math.floor(Math.random() * tickets.length);
-        const randomTicketId = tickets[randomIndex].id;
         const tanggal_waktu = new Date();
 
         const newOrder = await prisma.order.create({
@@ -53,7 +46,7 @@ const createOrder = async (req, res, next) => {
                 },
                 ticket: {
                     connect: {
-                        id: randomTicketId
+                        id: ticketId
                     }
                 },
                 user: {
@@ -133,9 +126,9 @@ const listOrders = async (req, res, next) => {
  * @param {import("express").NextFunction} next
  */
 const getOrder = async (req, res, next) => {
-    const orderId = Number(req.params.id);
-
     try {
+        const orderId = Number(req.params.id);
+
         if (!orderId) {
             return res.status(400).json({
                 status: false,
@@ -143,11 +136,27 @@ const getOrder = async (req, res, next) => {
             });
         }
 
+        const users = await prisma.user.findUnique({
+            where: {
+                id: req.user.id
+            }
+        });
+
+        if (!users) {
+            return res.status(401).json({
+                status: false,
+                message: "Users not found"
+            });
+        }
+
         const order = await prisma.order.findUnique({
-            where: { id: orderId },
             include: {
                 ticket: true,
                 user: true
+            },
+            where: {
+                id: orderId,
+                userId: users.id
             }
         });
 
@@ -174,61 +183,53 @@ const getOrder = async (req, res, next) => {
  * @param {import("express").NextFunction} next
  */
 const updateOrder = async (req, res, next) => {
-    const orderId = Number(req.params.id);
-    const {
-        nama,
-        tanggal_lahir,
-        kewarganegaraan,
-        ktp_pasport,
-        negara_penerbit,
-        berlaku_sampai,
-        no_kursi,
-        is_baby
-    } = req.body;
-
-    if (!orderId) {
-        return res.status(400).json({
-            status: false,
-            message: "Bad Request"
-        });
-    }
-
-    const tickets = await prisma.ticket.findMany({
-        select: {
-            id: true
-        }
-    });
-
-    const users = await prisma.user.findUnique({
-        where: {
-            id: req.user.id
-        }
-    });
-
-    if (!users) {
-        return res.status(401).json({
-            status: false,
-            message: "Users not found"
-        });
-    }
-
-    const randomIndex = Math.floor(Math.random() * tickets.length);
-    const randomTicketId = tickets[randomIndex].id;
-
     try {
+        const orderId = Number(req.params.id);
+        const { orders } = req.body;
+
+        const ordersArr = [];
+
+        if (orders.length > 0 && orderId) {
+            orders.forEach((order) => {
+                ordersArr.push(order);
+            });
+        } else {
+            return res.status(400).json({
+                status: false,
+                message: "Bad Request"
+            });
+        }
+
+        const users = await prisma.user.findUnique({
+            where: {
+                id: req.user.id
+            }
+        });
+
+        if (!users) {
+            return res.status(401).json({
+                status: false,
+                message: "Users not found"
+            });
+        }
+
+        const ticketId = await prisma.order.findUnique({
+            where: {
+                id: orderId
+            },
+            select: {
+                ticketId: true
+            }
+        });
+
         const updatedOrder = await prisma.order.update({
             data: {
-                nama,
-                tanggal_lahir,
-                kewarganegaraan,
-                ktp_pasport,
-                negara_penerbit,
-                berlaku_sampai,
-                no_kursi,
-                is_baby,
+                Orders: {
+                    create: ordersArr
+                },
                 ticket: {
                     connect: {
-                        id: randomTicketId
+                        id: ticketId.ticketId
                     }
                 },
                 user: {
