@@ -1,10 +1,11 @@
 {
-  "name": "prisma",
+  "name": "jetlajah",
   "version": "1.0.0",
   "description": "",
   "type": "commonjs",
   "main": "app.js",
   "scripts": {
+    "postinstall": "prisma generate && prisma migrate deploy",
     "dev": "nodemon app.js",
     "start": "node app.js"
   },
@@ -22,10 +23,18 @@
     "ejs": "^3.1.10",
     "express": "^4.19.2",
     "express-session": "^1.18.0",
+    "googleapis": "^137.1.0",
+    "imagekit": "^5.0.1",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
+    "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.13",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
     "pg": "^8.11.5",
     "prisma": "^5.11.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0"
   }
 }
