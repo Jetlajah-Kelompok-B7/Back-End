@@ -31,45 +31,48 @@ const register = async (req, res, next) => {
 
         const encryptedPassword = await bcrypt.hash(password, 10);
 
-        const user = await prisma.user.create({
-            data: {
-                email,
-                password: encryptedPassword,
-                Profile: {
-                    create: {
-                        nama,
-                        no_telp
+        const user = await prisma.$transaction(async (prisma) => {
+            const newUser = await prisma.user.create({
+                data: {
+                    email,
+                    password: encryptedPassword,
+                    Profile: {
+                        create: {
+                            nama,
+                            no_telp
+                        }
                     }
                 }
-            }
-        });
+            });
 
-        const token = jwt.sign(user.id, process.env.JWT_SECRET);
+            const token = jwt.sign(newUser.id, process.env.JWT_SECRET);
 
-        await transporter.sendMail({
-            from: `"${process.env.EMAIL_USERNAME}" <${process.env.EMAIL}>`,
-            to: email.toString(),
-            subject: "Email Verification",
-            text: "Please verify your email address by clicking the link below.",
-            html: `
-                <div style="font-family: Arial, sans-serif; color: #333;">
-                <h2>Email Verification</h2>
-                <p>Please verify your email address by clicking the link below:</p>
-                <a href="${req.protocol}://${req.get('host')}/api/verif-email?token=${token}" style="color: #1a73e8;">Verify Email</a>
-                <br/><br/>
-                <p>If you did not request this, please ignore this email.</p>
-                <p>Thank you!</p>
-                </div>
-            `,
-        });
+            await transporter.sendMail({
+                from: `"${process.env.EMAIL_USERNAME}" <${process.env.EMAIL}>`,
+                to: email.toString(),
+                subject: "Email Verification",
+                text: "Please verify your email address by clicking the link below.",
+                html: `
+                    <div style="font-family: Arial, sans-serif; color: #333;">
+                    <h2>Email Verification</h2>
+                    <p>Please verify your email address by clicking the link below:</p>
+                    <a href="${req.protocol}://${req.get('host')}/api/verif-email?token=${token}" style="color: #1a73e8;">Verify Email</a>
+                    <br/><br/>
+                    <p>If you did not request this, please ignore this email.</p>
+                    <p>Thank you!</p>
+                    </div>
+                `,
+            });
 
-        delete user.password;
+            delete newUser.password;
 
-        return res.status(201).json({
-            status: true,
-            message: "Created",
-            data: user
-        });
+            return res.status(201).json({
+                status: true,
+                message: "Created",
+                data: newUser
+            });
+
+        }); 
     } catch (error) {
         next(error);
     }
