@@ -35,7 +35,7 @@ const profile = async (req, res, next) => {
  * @param {import("express").NextFunction} next
  */
 const updateProfile = async (req, res, next) => {
-    const { nama, tanggal_lahir, no_telp, alamat, pin } = req.body;
+    const { nama, tanggal_lahir, no_telp, alamat } = req.body;
     const image = req.file?.buffer?.toString("base64");
 
     try {
@@ -45,10 +45,13 @@ const updateProfile = async (req, res, next) => {
             }
         }).Profile();
 
-        const photo_profile = imagekit.upload({
-            fileName: Date.now() + path.extname(req.file.originalname),
-            file: image
-        });
+        let photo_profile;
+        if (image) {
+            photo_profile = await imagekit.upload({
+                fileName: Date.now() + path.extname(req.file.originalname),
+                file: image
+            });
+        }
 
         const profile = await prisma.profile.update({
             data: {
@@ -56,8 +59,7 @@ const updateProfile = async (req, res, next) => {
                 tanggal_lahir: tanggal_lahir ? tanggal_lahir : users.tanggal_lahir,
                 no_telp: no_telp ? no_telp : users.no_telp,
                 alamat: alamat ? alamat : users.alamat,
-                photo_profile: photo_profile ? photo_profile.url : users.photo_profile,
-                pin: pin ? pin : users.pin
+                photo_profile: photo_profile ? photo_profile.url : users.photo_profile
             },
             where: {
                 userId: users.id
