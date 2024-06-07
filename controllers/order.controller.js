@@ -13,7 +13,7 @@ const createOrder = async (req, res, next) => {
 
         const ordersArr = [];
 
-        if (orders.length > 0) {
+        if (orders.length > 0 && ticketId) {
             orders.forEach((order) => {
                 ordersArr.push(order);
             });
@@ -189,7 +189,7 @@ const updateOrder = async (req, res, next) => {
 
         const ordersArr = [];
 
-        if (orders.length > 0) {
+        if (orders.length > 0 && orderId) {
             orders.forEach((order) => {
                 ordersArr.push(order);
             });
