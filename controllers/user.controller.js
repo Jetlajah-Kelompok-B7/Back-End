@@ -47,7 +47,7 @@ const updateProfile = async (req, res, next) => {
 
         let photo_profile;
         if (image) {
-            photo_profile = imagekit.upload({
+            photo_profile = await imagekit.upload({
                 fileName: Date.now() + path.extname(req.file.originalname),
                 file: image
             });
