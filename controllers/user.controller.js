@@ -45,10 +45,13 @@ const updateProfile = async (req, res, next) => {
             }
         }).Profile();
 
-        const photo_profile = imagekit.upload({
-            fileName: Date.now() + path.extname(req.file.originalname),
-            file: image
-        });
+        let photo_profile;
+        if (image) {
+            photo_profile = imagekit.upload({
+                fileName: Date.now() + path.extname(req.file.originalname),
+                file: image
+            });
+        }
 
         const profile = await prisma.profile.update({
             data: {
