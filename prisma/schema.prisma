@@ -40,7 +40,7 @@ model Profile {
     alamat        String?
     photo_profile String?
     pin           Int?
-    user          User    @relation(fields: [userId], references: [id])
+    user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId        Int     @unique
 
     @@map("profiles")
@@ -52,7 +52,7 @@ model Notification {
     deskripsi     String
     tanggal_waktu DateTime         @db.Timestamptz()
     kategori      NotificationEnum @default(INFO)
-    user          User             @relation(fields: [userId], references: [id])
+    user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId        Int
 
     @@map("notifications")
@@ -159,7 +159,7 @@ model Order {
     id       Int           @id @default(autoincrement())
     ticket   Ticket        @relation(fields: [ticketId], references: [id])
     ticketId Int
-    user     User          @relation(fields: [userId], references: [id])
+    user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId   Int
     Orders   Order_Items[]
     Checkout Checkout?
@@ -178,7 +178,7 @@ model Order_Items {
     berlaku_sampai  DateTime @db.Timestamptz()
     no_kursi        Int
     nama_keluarga   String?
-    Order           Order?   @relation(fields: [orderId], references: [id])
+    Order           Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
     orderId         Int?
 
     @@map("order_items")
@@ -191,7 +191,7 @@ model Checkout {
     total               Int
     tanggal_waktu       DateTime?            @db.Timestamptz()
     status              CheckoutStatus       @default(Unpaid)
-    order               Order                @relation(fields: [orderId], references: [id])
+    order               Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
     orderId             Int                  @unique
     History_Transaction History_Transaction?
 
@@ -206,7 +206,7 @@ enum CheckoutStatus {
 
 model History_Transaction {
     id         Int      @id @default(autoincrement())
-    checkout   Checkout @relation(fields: [checkoutId], references: [id])
+    checkout   Checkout @relation(fields: [checkoutId], references: [id], onDelete: Cascade)
     checkoutId Int      @unique
 
     @@map("history_transactions")
