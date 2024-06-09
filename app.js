@@ -7,6 +7,7 @@ const cors = require("cors");
 const port = 3000;
 const api = require("./routers/index.router");
 
+app.set("views", __dirname + "/views");
 app.set("view engine", "ejs");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
