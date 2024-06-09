@@ -32,14 +32,16 @@ const register = async (req, res, next) => {
 
         const encryptedPassword = await bcrypt.hash(password, 10);
 
-        const user = await prisma.user.create({
-            data: {
-                email,
-                password: encryptedPassword,
-                Profile: {
-                    create: {
-                        nama,
-                        no_telp
+        const user = await prisma.$transaction(async (prisma) => {
+            const newUser = await prisma.user.create({
+                data: {
+                    email,
+                    password: encryptedPassword,
+                    Profile: {
+                        create: {
+                            nama,
+                            no_telp
+                        }
                     }
                 },
                 Notification: {
@@ -49,17 +51,16 @@ const register = async (req, res, next) => {
                         tanggal_waktu: new Date()
                     }
                 }
-            }
-        });
+            });
 
-        const token = jwt.sign(user.id, process.env.JWT_SECRET);
+            const token = jwt.sign(user.id, process.env.JWT_SECRET);
 
-        await transporter.sendMail({
-            from: `"${process.env.EMAIL_USERNAME}" <${process.env.EMAIL}>`,
-            to: email.toString(),
-            subject: "Email Verification",
-            text: "Please verify your email address by clicking the link below.",
-            html: `
+            await transporter.sendMail({
+                from: `"${process.env.EMAIL_USERNAME}" <${process.env.EMAIL}>`,
+                to: email.toString(),
+                subject: "Email Verification",
+                text: "Please verify your email address by clicking the link below.",
+                html: `
                 <div style="font-family: Arial, sans-serif; color: #333;">
                 <h2>Email Verification</h2>
                 <p>Please verify your email address by clicking the link below:</p>
@@ -69,14 +70,16 @@ const register = async (req, res, next) => {
                 <p>Thank you!</p>
                 </div>
             `
-        });
+            });
 
-        delete user.password;
+            delete newUser.password;
 
-        return res.status(201).json({
-            status: true,
-            message: "Created",
-            data: user
+            return res.status(201).json({
+                status: true,
+                message: "Created",
+                data: newUser
+            });
+
         });
     } catch (error) {
         next(error);
@@ -171,6 +174,71 @@ const createPin = async (req, res, next) => {
             status: true,
             message: "OK",
             data: req.user
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
+const changePassword = async (req, res, next) => {
+    try {
+        const { password, confirmpassword } = req.body;
+
+        if (!password || !confirmpassword) {
+            return res.status(400).json({
+                status: false,
+                message: "Bad Request"
+            });
+        }
+
+        if (password !== confirmpassword) {
+            return res.status(401).json({
+                status: false,
+                message: "Password and confirm password does not match"
+            });
+        }
+
+        const encryptedPassword = await bcrypt.hash(password, 10);
+
+        const users = await prisma.user.findUnique({
+            where: {
+                id: req.user.id
+            }
+        });
+
+        if (!users) {
+            return res.status(404).json({
+                status: false,
+                message: "User not found"
+            });
+        }
+
+        await prisma.user.update({
+            data: {
+                password: encryptedPassword
+            },
+            where: {
+                id: users.id
+            }
+        });
+
+        await prisma.notification.create({
+            data: {
+                judul: "Change Password",
+                deskripsi: "Your password has been updated successfully!",
+                tanggal_waktu: new Date(),
+                userId: users.id
+            }
+        });
+
+        return res.status(200).json({
+            status: true,
+            message: "Success"
         });
     } catch (error) {
         next(error);
@@ -501,6 +569,7 @@ module.exports = {
     login,
     createPin,
     forgotPin,
+    changePassword,
     pinValidation,
     googleOAuth2,
     resetPassword,
