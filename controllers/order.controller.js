@@ -189,11 +189,7 @@ const updateOrder = async (req, res, next) => {
 
         const ordersArr = [];
 
-<<<<<<< HEAD
-        if (orders.length > 0) {
-=======
         if (orders.length > 0 && orderId) {
->>>>>>> 2bd671b (refactor(order): refactoring updateOrder)
             orders.forEach((order) => {
                 ordersArr.push(order);
             });

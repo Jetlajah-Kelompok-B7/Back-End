@@ -4,13 +4,18 @@ const order = require("./order.router");
 const history = require("./history.router");
 const auth = require("./auth.router");
 const user = require("./user.router");
-const ticket = require('./ticket.router');
+const ticket = require("./ticket.router");
 
 app.get("/", (req, res) => {
-    res.status(200).json({
+    const routes = {};
+    ["history", "user", "checkout", "ticket"].forEach((route) => {
+        routes[route] = `${req.protocol}://${req.get("host")}/api/${route}`;
+    });
+
+    return res.status(200).json({
         status: true,
         message: "Connected",
-        data: null
+        data: routes
     });
 });
 
@@ -19,6 +24,6 @@ app.use("/user", user);
 app.use("/checkout", checkout);
 app.use("/order", order);
 app.use("/history", history);
-app.use('/ticket', ticket);
+app.use("/ticket", ticket);
 
 module.exports = app;
