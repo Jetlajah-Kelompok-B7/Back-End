@@ -525,10 +525,25 @@ const googleOAuth2 = async (req, res, next) => {
     }
 };
 
-const verifEmail = async (req, res, next) => {
+/**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
+const verifyEmail = async (req, res, next) => {
     try {
         const { token } = req.query;
-        const userId = parseInt(jwt.verify(token, process.env.JWT_SECRET));
+        const userId = jwt.verify(token, process.env.JWT_SECRET, (err, data) => {
+            if (err) {
+                return res.status(400).json({
+                    status: false,
+                    message: "Failed to verify"
+                });
+            }
+
+            return data.id;
+        });
+
         const checkUser = await prisma.user.findFirst({
             where: {
                 id: userId
@@ -576,5 +591,5 @@ module.exports = {
     requestResetPassword,
     forgotPasswordView,
     resetPasswordView,
-    verifEmail
+    verifyEmail
 };
