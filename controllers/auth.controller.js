@@ -42,18 +42,18 @@ const register = async (req, res, next) => {
                             nama,
                             no_telp
                         }
+                    },
+                    Notification: {
+                        create: {
+                            judul: "Register Success",
+                            deskripsi: "Welcome user!",
+                            tanggal_waktu: new Date()
+                        }
                     }
                 },
-                Notification: {
-                    create: {
-                        judul: "Register Success",
-                        deskripsi: "Welcome user!",
-                        tanggal_waktu: new Date()
-                    }
-                }
             });
 
-            const token = jwt.sign(user.id, process.env.JWT_SECRET);
+            const token = jwt.sign(newUser.id, process.env.JWT_SECRET);
 
             await transporter.sendMail({
                 from: `"${process.env.EMAIL_USERNAME}" <${process.env.EMAIL}>`,
@@ -541,15 +541,20 @@ const verifyEmail = async (req, res, next) => {
                 });
             }
 
-            return data.id;
+            return data;
         });
 
         const checkUser = await prisma.user.findFirst({
             where: {
-                id: userId
+                id: parseInt(userId)
             },
-            include: {
-                Profile: true
+            select: {
+                is_verified: true,
+                Profile: {
+                    select: {
+                        nama: true
+                    }
+                }
             }
         });
 
@@ -566,7 +571,7 @@ const verifyEmail = async (req, res, next) => {
 
         await prisma.user.update({
             where: {
-                id: userId
+                id: parseInt(userId)
             },
             data: {
                 is_verified: true

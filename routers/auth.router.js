@@ -14,6 +14,6 @@ app.post("/request-reset-password", requestResetPassword);
 app.post("/reset-password", resetPassword);
 app.get("/forgot-password", forgotPasswordView);
 app.get("/reset-password", resetPasswordView);
-app.get("/verify-email", verifyEmail);
+app.get("/verif-email", verifyEmail);
 
 module.exports = app;
