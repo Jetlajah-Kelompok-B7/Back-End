@@ -1,5 +1,5 @@
 const app = require("express").Router();
-const { register, login, createPin, forgotPin, pinValidation, googleOAuth2, requestResetPassword, resetPassword, forgotPasswordView, resetPasswordView, verifEmail } = require("../controllers/auth.controller");
+const { register, login, createPin, forgotPin, pinValidation, googleOAuth2, requestResetPassword, resetPassword, forgotPasswordView, resetPasswordView, verifEmail, changePassword } = require("../controllers/auth.controller");
 const { restrict, authGoogle, authGoogleCallback } = require("../middlewares/middleware");
 
 app.get("/login/google", authGoogle);
@@ -9,8 +9,9 @@ app.post("/login", login);
 app.post("/create-pin", restrict, createPin);
 app.put("/forgot-pin", restrict, forgotPin);
 app.post("/pin-validation", restrict, pinValidation);
+app.put("/change-password", restrict, changePassword);
 app.post("/request-reset-password", requestResetPassword);
-app.put("/reset-password", resetPassword);
+app.post("/reset-password", resetPassword);
 app.get("/forgot-password", forgotPasswordView);
 app.get("/reset-password", resetPasswordView);
 app.get("/verif-email", verifEmail);
