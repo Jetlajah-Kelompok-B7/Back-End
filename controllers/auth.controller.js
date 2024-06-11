@@ -42,18 +42,18 @@ const register = async (req, res, next) => {
                             nama,
                             no_telp
                         }
-                    }
-                },
-                Notification: {
-                    create: {
-                        judul: "Register Success",
-                        deskripsi: "Welcome user!",
-                        tanggal_waktu: new Date()
+                    },
+                    Notification: {
+                        create: {
+                            judul: "Register Success",
+                            deskripsi: "Welcome user!",
+                            tanggal_waktu: new Date()
+                        }
                     }
                 }
             });
 
-            const token = jwt.sign(user.id, process.env.JWT_SECRET);
+            const token = jwt.sign(newUser.id, process.env.JWT_SECRET);
 
             await transporter.sendMail({
                 from: `"${process.env.EMAIL_USERNAME}" <${process.env.EMAIL}>`,
