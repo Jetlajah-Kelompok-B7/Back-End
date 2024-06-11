@@ -50,7 +50,7 @@ const register = async (req, res, next) => {
                             tanggal_waktu: new Date()
                         }
                     }
-                },
+                }
             });
 
             const token = jwt.sign(newUser.id, process.env.JWT_SECRET);
@@ -541,7 +541,7 @@ const verifyEmail = async (req, res, next) => {
                 });
             }
 
-            return data;
+            return data.id;
         });
 
         const checkUser = await prisma.user.findFirst({
