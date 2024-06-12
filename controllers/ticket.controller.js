@@ -7,7 +7,7 @@ module.exports = {
     getAllTickets: async (req, res, next) => {
         try {
 
-            const { bandara_keberangkatan, bandara_kedatangan, tanggal_pergi, tanggal_pulang, kelas, bagasi, hiburan, makanan, wifi, usb, min_harga, max_harga, no_transit } = req.query;
+            const { bandara_keberangkatan, bandara_kedatangan, tanggal_pergi, tanggal_pulang, kelas, bagasi, hiburan, makanan, wifi, usb, min_harga, max_harga, no_transit, status_tiket } = req.query;
     
             const priceFilter = {};
             if (min_harga !== undefined) {
@@ -38,7 +38,7 @@ module.exports = {
                     ...(Object.keys(priceFilter).length > 0 && { harga: priceFilter }),
                     schedule: {
                         flight: {
-                            status: "Ready",
+                            status: status_tiket,
                             bandara_keberangkatan: {
                                 kode_bandara: bandara_keberangkatan
                             },
@@ -66,7 +66,7 @@ module.exports = {
                     ...(Object.keys(priceFilter).length > 0 && { harga: priceFilter }),
                     schedule: {
                         flight: {
-                            status: "Ready",
+                            status: status_tiket,
                             bandara_keberangkatan: {
                                 kode_bandara: bandara_keberangkatan
                             },
