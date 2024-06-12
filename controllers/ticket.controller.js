@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client')
 const { paginationUtils } = require('../utils/pagination')
 const { toBoolean } = require('../utils/toBoolean')
+const { getStartOfDay, getEndOfDay } = require('../utils/dateConverter')
 const prisma = new PrismaClient()
 
 module.exports = {
@@ -27,6 +28,11 @@ module.exports = {
                 }
             }
 
+            const startOfTanggalPergi = getStartOfDay(tanggal_pergi);
+            const endOfTanggalPergi = getEndOfDay(tanggal_pergi);
+            const startOfTanggalPulang = getStartOfDay(tanggal_pulang);
+            const endOfTanggalPulang = getEndOfDay(tanggal_pulang);
+
             const ticketsTotal = await prisma.ticket.count({
                 where: {
                     kelas: kelas,
@@ -47,8 +53,18 @@ module.exports = {
                             },
                             ...transitStatus
                         },
-                        keberangkatan: tanggal_pergi,
-                        kedatangan: tanggal_pulang
+                        ...(startOfTanggalPergi && endOfTanggalPergi && {
+                            keberangkatan: {
+                                gte: new Date(startOfTanggalPergi),
+                                lt: new Date(endOfTanggalPergi),
+                            },
+                        }),
+                        ...(startOfTanggalPulang && endOfTanggalPulang && {
+                            kedatangan: {
+                              gte: startOfTanggalPulang,
+                              lt: endOfTanggalPulang,
+                            },
+                        }),
                     }
                 }
             })
@@ -75,8 +91,18 @@ module.exports = {
                             },
                             ...transitStatus
                         },
-                        keberangkatan: tanggal_pergi,
-                        kedatangan: tanggal_pulang
+                        ...(startOfTanggalPergi && endOfTanggalPergi && {
+                            keberangkatan: {
+                                gte: new Date(startOfTanggalPergi),
+                                lt: new Date(endOfTanggalPergi),
+                            },
+                        }),
+                        ...(startOfTanggalPulang && endOfTanggalPulang && {
+                            kedatangan: {
+                              gte: startOfTanggalPulang,
+                              lt: endOfTanggalPulang,
+                            },
+                        }),
                     }
                 },
                 select: {
