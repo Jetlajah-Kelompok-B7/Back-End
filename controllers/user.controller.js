@@ -2,7 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
 const path = require("path");
-const imagekit = require("../middlewares/middleware").imagekit;
+const imagekit = require("../libs/imagekit");
 
 /**
  * @param {import("express").Request} req
@@ -117,12 +117,11 @@ const notification = async (req, res, next) => {
  */
 const deleteUser = async (req, res, next) => {
     try {
-        
         const id = parseInt(req.params.id);
 
         const users = await prisma.user.findUnique({
             where: {
-                id
+                id: id
             }
         });
 
@@ -177,8 +176,8 @@ const getUsers = async (req, res, next) => {
                 alamat: user.Profile.alamat,
                 photo_profile: user.Profile.photo_profile,
                 role: user.role
-            }
-        })
+            };
+        });
 
         return res.status(200).json({
             status: true,
