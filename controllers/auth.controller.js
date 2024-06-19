@@ -122,10 +122,26 @@ const login = async (req, res, next) => {
 
         const token = jwt.sign(user, process.env.JWT_SECRET);
 
+        res.cookie("token", token, { httpOnly: true });
+
+        return res.redirect(process.env.REDIRECT_URL);
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
+const logout = async (req, res, next) => {
+    try {
+        res.clearCookie("token", { httpOnly: true });
+
         return res.status(200).json({
             status: true,
-            message: "OK",
-            data: { ...user, token }
+            message: "OK"
         });
     } catch (error) {
         next(error);
@@ -168,12 +184,6 @@ const createPin = async (req, res, next) => {
             where: {
                 userId: user.id
             }
-        });
-
-        return res.status(200).json({
-            status: true,
-            message: "OK",
-            data: req.user
         });
     } catch (error) {
         next(error);
@@ -515,11 +525,9 @@ const googleOAuth2 = async (req, res, next) => {
     try {
         const token = jwt.sign({ id: req.user.id }, process.env.JWT_SECRET);
 
-        return res.status(200).json({
-            status: 200,
-            message: "OK",
-            data: { user: req.user, token }
-        });
+        res.cookie("token", token, { httpOnly: true });
+
+        return res.redirect(process.env.REDIRECT_URL);
     } catch (error) {
         next(error);
     }
@@ -580,13 +588,14 @@ const verifyEmail = async (req, res, next) => {
 
         return res.render("verif-email-success", { name: checkUser.Profile.nama });
     } catch (err) {
-        return res.render("error", { message: "Silahkan cek kembali link yang anda akses!" });
+        return res.status(500).render("error", { message: "Silahkan cek kembali link yang anda akses!" });
     }
 };
 
 module.exports = {
     register,
     login,
+    logout,
     createPin,
     forgotPin,
     changePassword,

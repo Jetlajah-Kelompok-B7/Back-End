@@ -8,15 +8,14 @@ const passport = require("../libs/passport");
  */
 const restrict = (req, res, next) => {
     try {
-        const { authorization } = req.headers;
-        if (!authorization || !authorization.split(" ")[1]) {
+        const { token } = req.cookies;
+        if (!token) {
             return res.status(401).json({
                 status: 401,
                 message: "Token not provided!"
             });
         }
 
-        const token = authorization.split(" ")[1];
         jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
             if (err) {
                 return res.status(401).json({
