@@ -131,18 +131,47 @@ const listOrders = async (req, res, next) => {
 
         const orders = await prisma.order.findMany({
             include: {
-                ticket: true,
-                user: true
+                ticket: {
+                    include: {
+                        schedule: {
+                            include: {
+                                flight: {
+                                    include: {
+                                        bandara_keberangkatan: true,
+                                        bandara_kedatangan: true
+                                    }
+                                }
+                            }
+                        }
+                    }   
+                },
+                Orders: true
             },
             where: {
                 userId: users.id
             }
         });
 
+        const data = orders.map((order) => ({
+            id: order.id,
+            ticket: {
+                id: order.ticket.id,
+                nama: order.ticket.nama,
+                harga: order.ticket.harga,
+                schedule: {
+                    bandara_asal: order.ticket.schedule.flight.bandara_kedatangan.nama_bandara,
+                    jam_keberangkatan: order.ticket.schedule.keberangkatan,
+                    bandara_tujuan: order.ticket.schedule.flight.bandara_kedatangan.nama_bandara,
+                    jam_kedatangan: order.ticket.schedule.kedatangan
+                }
+            },
+            Orders: order.Orders
+        }));
+
         return res.status(200).json({
             status: true,
             message: "Orders retrieved successfully",
-            data: orders
+            data: data
         });
     } catch (error) {
         next(error);
