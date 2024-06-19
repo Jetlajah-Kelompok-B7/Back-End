@@ -175,9 +175,8 @@ model Order_Items {
     ktp_pasport     String?
     is_baby         Boolean
     negara_penerbit String
-    berlaku_sampai  DateTime @db.Timestamptz()
+    berlaku_sampai  DateTime? @db.Timestamptz()
     no_kursi        Int
-    nama_keluarga   String?
     Order           Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
     orderId         Int?
 
