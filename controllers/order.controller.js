@@ -156,7 +156,6 @@ const listOrders = async (req, res, next) => {
             id: order.id,
             ticket: {
                 id: order.ticket.id,
-                nama: order.ticket.nama,
                 harga: order.ticket.harga,
                 schedule: {
                     bandara_asal: order.ticket.schedule.flight.bandara_kedatangan.nama_bandara,
@@ -207,16 +206,58 @@ const getOrder = async (req, res, next) => {
             });
         }
 
+        const exists = await prisma.order.findUnique({
+            where: {
+                id: orderId,
+                userId: users.id
+            }
+        });
+
+        if (!exists) {
+            return res.status(404).json({
+                status: false,
+                message: "Order Not Found"
+            });
+        }
+
         const order = await prisma.order.findUnique({
             include: {
-                ticket: true,
-                user: true
+                ticket: {
+                    include: {
+                        schedule: {
+                            include: {
+                                flight: {
+                                    include: {
+                                        bandara_keberangkatan: true,
+                                        bandara_kedatangan: true
+                                    }
+                                }
+                            }
+                        }
+                    }   
+                },
+                Orders: true
             },
             where: {
                 id: orderId,
                 userId: users.id
             }
         });
+
+        const data = {
+            id: order.id,
+            ticket: {
+                id: order.ticket.id,
+                harga: order.ticket.harga,
+                schedule: {
+                    bandara_asal: order.ticket.schedule.flight.bandara_kedatangan.nama_bandara,
+                    jam_keberangkatan: order.ticket.schedule.keberangkatan,
+                    bandara_tujuan: order.ticket.schedule.flight.bandara_kedatangan.nama_bandara,
+                    jam_kedatangan: order.ticket.schedule.kedatangan
+                }
+            },
+            Orders: order.Orders
+        };
 
         if (!order) {
             return res.status(404).json({
@@ -228,7 +269,7 @@ const getOrder = async (req, res, next) => {
         return res.status(200).json({
             status: true,
             message: "Order retrieved successfully",
-            data: order
+            data: data
         });
     } catch (error) {
         next(error);
