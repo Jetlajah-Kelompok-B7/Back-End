@@ -163,6 +163,7 @@ const getAllTickets = async (req, res, next) => {
 
         const data = tickets.map(ticket => {
             return {
+                id: ticket.id,
                 class: ticket.kelas,
                 price: ticket.harga,
                 status: ticket.schedule.flight.status,
@@ -207,6 +208,117 @@ const getAllTickets = async (req, res, next) => {
     }
 };
 
+const getTicketById = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        const ticket = await prisma.ticket.findUnique({
+            where: {
+                id: parseInt(id)
+            },
+            select: {
+                id: true,
+                kelas: true,
+                harga: true,
+                jumlah: true,
+                schedule: {
+                    select: {
+                        keberangkatan: true,
+                        kedatangan: true,
+                        flight: {
+                            select: {
+                                bandara_keberangkatan: true,
+                                bandara_kedatangan: true,
+                                terminal_keberangkatan: true,
+                                status: true,
+                                Transit: {
+                                    select: {
+                                        airport: {
+                                            select: {
+                                                nama_bandara: true,
+                                                kode_bandara: true,
+                                                lokasi: true
+                                            }
+                                        }
+                                    }
+                                },
+                                Plane: {
+                                    select: {
+                                        kode_pesawat: true,
+                                        model_pesawat: true,
+                                        bagasi_kabin: true,
+                                        bagasi: true,
+                                        jarak_kursi: true,
+                                        jumlah_kursi: true,
+                                        Airline: {
+                                            select: {
+                                                kode_maskapai: true,
+                                                nama_maskapai: true,
+                                                logo_maskapai: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        if (!ticket) {
+            return res.status(404).json({
+                status: false,
+                message: "Ticket not found"
+            });
+        }
+
+        const data = {
+            id: ticket.id,
+            class: ticket.kelas,
+            price: ticket.harga,
+            status: ticket.schedule.flight.status,
+            jumlah: ticket.jumlah,
+            schedule: {
+                takeoff: {
+                    time: ticket.schedule.keberangkatan,
+                    airport_code: ticket.schedule.flight.bandara_keberangkatan.kode_bandara,
+                    airport_name: ticket.schedule.flight.bandara_keberangkatan.nama_bandara
+                },
+                landing: {
+                    time: ticket.schedule.kedatangan,
+                    airport_code: ticket.schedule.flight.bandara_kedatangan.kode_bandara,
+                    airport_name: ticket.schedule.flight.bandara_kedatangan.nama_bandara
+                },
+                transit: ticket.schedule.flight.Transit.map(transit => {
+                    return {
+                        airport_code: transit.airport.kode_bandara,
+                        airport_name: transit.airport.nama_bandara,
+                        location: transit.airport.lokasi
+                    };
+                }),
+                plane: {
+                    airline_name: ticket.schedule.flight.Plane.Airline.nama_maskapai,
+                    code: ticket.schedule.flight.Plane.kode_pesawat,
+                    model: ticket.schedule.flight.Plane.model_pesawat,
+                    baggage: ticket.schedule.flight.Plane.bagasi,
+                    cabin_baggage: ticket.schedule.flight.Plane.bagasi_kabin
+                }
+            },
+        };
+
+        return res.status(200).json({
+            status: true,
+            message: "Ticket retrieved successfully",
+            data: data
+        });
+
+    } catch (error) {
+        next(error);
+    }
+}
+
 module.exports = {
-    getAllTickets
+    getAllTickets,
+    getTicketById
 };
