@@ -118,6 +118,14 @@ const login = async (req, res, next) => {
             });
         }
 
+        const isGoogleUser = await prisma.user.findUnique({ where: { email: email } });
+        if (isGoogleUser.is_googleuser) {
+            return res.status(403).json({
+                status: false,
+                message: "user using google oauth 2.0, please sign in with google oauth"
+            });
+        }
+
         delete user.password;
 
         const token = jwt.sign(user, process.env.JWT_SECRET);
@@ -232,7 +240,8 @@ const changePassword = async (req, res, next) => {
                 judul: "Change Password",
                 deskripsi: "Your password has been updated successfully!",
                 tanggal_waktu: new Date(),
-                userId: users.id
+                userId: users.id,
+                kategori: "WARNING"
             }
         });
 
@@ -322,17 +331,13 @@ const forgotPin = async (req, res, next) => {
             }
         });
 
-        const tanggal_waktu = new Date();
         await prisma.notification.create({
             data: {
                 judul: "Pin updated",
                 deskripsi: "Your PIN has been updated successfully",
-                tanggal_waktu,
-                user: {
-                    connect: {
-                        id: users.id
-                    }
-                }
+                tanggal_waktu: new Date(),
+                userId: users.id,
+                kategori: "WARNING"
             }
         });
 
