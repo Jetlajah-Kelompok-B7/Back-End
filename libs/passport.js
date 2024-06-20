@@ -11,19 +11,22 @@ const prisma = new PrismaClient();
  */
 const callbackPassport = async (accessToken, refreshToken, profile, done) => {
     try {
-        const exists = await prisma.user.findUnique({
-            where: {
-                email: profile.emails[0].value
-            }
-        });
-
-        if (!exists) {
-            throw new Error("User not found");
-        }
-
-        const user = await prisma.user.update({
-            data: { googleid: profile.id },
-            where: { email: profile.emails[0].value }
+        const user = await prisma.user.upsert({
+            create: {
+                email: profile._json.email,
+                is_googleuser: true,
+                googleid: profile.id,
+                Profile: {
+                    create: {
+                        nama: profile._json.name,
+                        photo_profile: profile._json.picture
+                    }
+                }
+            },
+            update: {
+                googleid: profile.id
+            },
+            where: { email: profile._json.email }
         });
 
         done(null, user);
