@@ -14,15 +14,16 @@ datasource db {
 }
 
 model User {
-    id           Int            @id @default(autoincrement())
-    email        String         @unique
-    password     String
-    is_verified  Boolean        @default(false)
-    role         Role           @default(USER)
-    googleid     String?
-    Profile      Profile?
-    Notification Notification[]
-    Order        Order[]
+    id            Int            @id @default(autoincrement())
+    email         String         @unique
+    password      String?
+    is_verified   Boolean        @default(false)
+    role          Role           @default(USER)
+    googleid      String?
+    is_googleuser Boolean        @default(false)
+    Profile       Profile?
+    Notification  Notification[]
+    Order         Order[]
 
     @@map("users")
 }
@@ -35,7 +36,7 @@ enum Role {
 model Profile {
     id            Int     @id @default(autoincrement())
     nama          String
-    no_telp       String
+    no_telp       String?
     tanggal_lahir String?
     alamat        String?
     photo_profile String?
@@ -168,7 +169,7 @@ model Order {
 }
 
 model Order_Items {
-    id              Int      @id @default(autoincrement())
+    id              Int       @id @default(autoincrement())
     nama            String
     tanggal_lahir   String
     kewarganegaraan String
@@ -177,7 +178,7 @@ model Order_Items {
     negara_penerbit String
     berlaku_sampai  DateTime? @db.Timestamptz()
     no_kursi        Int
-    Order           Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+    Order           Order?    @relation(fields: [orderId], references: [id], onDelete: Cascade)
     orderId         Int?
 
     @@map("order_items")
