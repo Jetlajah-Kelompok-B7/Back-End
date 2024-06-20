@@ -192,7 +192,8 @@ const getAllTickets = async (req, res, next) => {
                     code: ticket.schedule.flight.Plane.kode_pesawat,
                     model: ticket.schedule.flight.Plane.model_pesawat,
                     baggage: ticket.schedule.flight.Plane.bagasi,
-                    cabin_baggage: ticket.schedule.flight.Plane.bagasi_kabin
+                    cabin_baggage: ticket.schedule.flight.Plane.bagasi_kabin,
+                    logo: ticket.schedule.flight.Plane.Airline.logo_maskapai
                 }
             };
         });
@@ -302,7 +303,8 @@ const getTicketById = async (req, res, next) => {
                     code: ticket.schedule.flight.Plane.kode_pesawat,
                     model: ticket.schedule.flight.Plane.model_pesawat,
                     baggage: ticket.schedule.flight.Plane.bagasi,
-                    cabin_baggage: ticket.schedule.flight.Plane.bagasi_kabin
+                    cabin_baggage: ticket.schedule.flight.Plane.bagasi_kabin,
+                    logo: ticket.schedule.flight.Plane.Airline.logo_maskapai
                 }
             },
         };
