@@ -9,19 +9,6 @@ const prisma = new PrismaClient();
  */
 const listHistoryTransactions = async (req, res, next) => {
     try {
-        const users = await prisma.user.findUnique({
-            where: {
-                id: req.user.id
-            }
-        });
-
-        if (!users) {
-            return res.status(401).json({
-                status: false,
-                message: "Users not found"
-            });
-        }
-
         const historyTransactionsTotal = await prisma.history_Transaction.count();
 
         const pagination = paginationUtils(req.query.page, req.query.page_size, historyTransactionsTotal);
@@ -61,13 +48,6 @@ const listHistoryTransactions = async (req, res, next) => {
                     }
                 }
             },
-            where: {
-                checkout: {
-                    order: {
-                        userId: users.id
-                    }
-                }
-            },
             take: pagination.page_size,
             skip: (pagination.current_page - 1) * pagination.page_size
         });
@@ -80,23 +60,22 @@ const listHistoryTransactions = async (req, res, next) => {
             const flight = schedule.flight;
             const departureAirport = flight.bandara_keberangkatan;
             const arrivalAirport = flight.bandara_kedatangan;
-            const user = order.user;
 
             return {
-                total_price: checkout.total,
-                class: ticket.kelas,
+                id: ht.id,
                 timestamp: checkout.tanggal_waktu,
-                passenger_id: user.id,
-                passenger_name: user.Profile ? user.Profile.nama : null,
                 departure_airport_name: departureAirport.nama_bandara,
-                arrival_airport_name: arrivalAirport.nama_bandara
+                arrival_airport_name: arrivalAirport.nama_bandara,
+                status: checkout.is_payment ? 'Issued' : 'Unpaid',
+                flight_date: schedule.tanggal_berangkat,
+                flight_time: schedule.waktu_berangkat
             };
         });
 
         return res.status(200).json({
             status: true,
             message: "History Transactions retrieved successfully",
-            data: data
+            data: data,
         });
     } catch (error) {
         next(error);
@@ -113,9 +92,9 @@ const getHistoryTransaction = async (req, res, next) => {
     const historyTransactionId = Number(req.params.id);
 
     try {
-        const users = await prisma.user.findUnique({
+        const users = await prisma.order.findUnique({
             where: {
-                id: req.user.id
+                id: req.order.id
             }
         });
 
@@ -129,29 +108,70 @@ const getHistoryTransaction = async (req, res, next) => {
         const historyTransaction = await prisma.history_Transaction.findUnique({
             include: {
                 checkout: {
+                    select:{
+                        metode_pembayaran: true,
+                        status: true,
+                        total: true,
+                        is_payment: true
+
+                    },
                     include: {
-                        order: {
+                        order:{
+                            select:{
+                                nama: true,
+                                no_kursi: true,
+                                nama_keluarga: true
+                            },
                             include: {
-                                ticket: {
-                                    include: {
-                                        schedule: {
-                                            include: {
-                                                flight: {
+                                ticket:{
+                                    select:{
+                                        kelas: true,
+                                        harga : true,
+                                        bagasi: true,
+                                        jumlah: true,
+                                        nama: true,
+                                        no_kursi: true,
+                                        nama_keluarga: true
+                                    },
+                                    include:{
+                                        schedule:{
+                                            select:{
+                                                keberangkatan:true,
+                                                kedatangan: true
+                                            },
+                                            include:{
+                                                flight:{
+                                                    select:{
+                                                        bandara_keberangkatan :true,
+                                                        bandara_kedatangan: true,
+                                                        terminal_keberangkatan: true,
+                                                        terminal_kedatangan: true,
+                                                        status: true,
+                                                        keberangkatan: true,
+                                                        kedatangan: true
+                                                    },
                                                     include: {
-                                                        bandara_keberangkatan: true,
-                                                        bandara_kedatangan: true
+                                                        Plane:{
+                                                            select:{
+                                                                kode_pesawat: true,
+                                                                model_pesawat: true,
+                                                                bagasi_kabin: true,
+                                                                bagasi: true,
+                                                                jarak_kursi: true,
+                                                                jumlah_kursi: true,
+                                                                status: true,
+                                                            },
+                                                            include:{
+                                                                Airline:{
+                                                                    select:{
+                                                                        kode_maskapai: true,
+                                                                        nama_maskapai: true
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
                                                     }
                                                 }
-                                            }
-                                        }
-                                    }
-                                },
-                                user: {
-                                    select: {
-                                        id: true,
-                                        Profile: {
-                                            select: {
-                                                nama: true
                                             }
                                         }
                                     }
@@ -179,17 +199,17 @@ const getHistoryTransaction = async (req, res, next) => {
             });
         }
 
-        const checkout = historyTransaction.checkout;
-        const order = checkout.order;
-        const ticket = order.ticket;
-        const schedule = ticket.schedule;
+        const checkout = historyTransaction;
+        const order = checkout;
+        const ticket = order;
+        const schedule = ticket;
         const flight = schedule.flight;
         const departureAirport = flight.bandara_keberangkatan;
         const arrivalAirport = flight.bandara_kedatangan;
         const user = order.user;
 
         const data = {
-            total_price: checkout.total,
+            total_price: checkout,
             class: ticket.kelas,
             timestamp: checkout.tanggal_waktu,
             passenger_id: user.id,
