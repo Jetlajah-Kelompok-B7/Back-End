@@ -5,6 +5,7 @@ const history = require("./history.router");
 const auth = require("./auth.router");
 const user = require("./user.router");
 const ticket = require("./ticket.router");
+const airport = require("./airport.router");
 
 app.get("/", (req, res) => {
     const routes = {};
@@ -25,5 +26,6 @@ app.use("/checkout", checkout);
 app.use("/order", order);
 app.use("/history", history);
 app.use("/ticket", ticket);
+app.use("/airport", airport);
 
 module.exports = app;
