@@ -53,7 +53,7 @@ const register = async (req, res, next) => {
                 }
             });
 
-            const token = jwt.sign(newUser.id, process.env.JWT_SECRET);
+            const token = jwt.sign(newUser, process.env.JWT_SECRET);
 
             await transporter.sendMail({
                 from: `"${process.env.EMAIL_USERNAME}" <${process.env.EMAIL}>`,
@@ -147,10 +147,7 @@ const logout = async (req, res, next) => {
     try {
         res.clearCookie("token", { httpOnly: true });
 
-        return res.status(200).json({
-            status: true,
-            message: "OK"
-        });
+        return res.redirect(`${process.env.REDIRECT_URL}/login`);
     } catch (error) {
         next(error);
     }
@@ -172,13 +169,13 @@ const createPin = async (req, res, next) => {
             });
         }
 
-        const user = await prisma.user.findFirst({
+        const users = await prisma.profile.findUnique({
             where: {
-                email: req.user.email
+                id: req.user.id
             }
         });
 
-        if (!user) {
+        if (!users) {
             return res.status(401).json({
                 status: false,
                 message: "invalid email or password!"
@@ -190,8 +187,13 @@ const createPin = async (req, res, next) => {
                 pin: Number(pin)
             },
             where: {
-                userId: user.id
+                userId: users.id
             }
+        });
+
+        return res.status(200).json({
+            status: true,
+            message: "OK"
         });
     } catch (error) {
         next(error);
