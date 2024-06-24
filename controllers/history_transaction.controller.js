@@ -80,16 +80,15 @@ const listHistoryTransactions = async (req, res, next) => {
             const flight = schedule.flight;
             const departureAirport = flight.bandara_keberangkatan;
             const arrivalAirport = flight.bandara_kedatangan;
-            const user = order.user;
 
             return {
-                total_price: checkout.total,
-                class: ticket.kelas,
+                id: ht.id,
                 timestamp: checkout.tanggal_waktu,
-                passenger_id: user.id,
-                passenger_name: user.Profile ? user.Profile.nama : null,
                 departure_airport_name: departureAirport.nama_bandara,
-                arrival_airport_name: arrivalAirport.nama_bandara
+                arrival_airport_name: arrivalAirport.nama_bandara,
+                status: checkout.is_payment ? "Issued" : "Unpaid",
+                flight_date: schedule.tanggal_berangkat,
+                flight_time: schedule.waktu_berangkat
             };
         });
 
@@ -125,18 +124,44 @@ const getHistoryTransaction = async (req, res, next) => {
             });
         }
 
+        const profile = await prisma.profile.findUnique({
+            where: {
+                id: users.id
+            }
+        });
+
         const historyTransaction = await prisma.history_Transaction.findUnique({
+            where: {
+                id: historyTransactionId,
+                checkout: {
+                    order: {
+                        userId: users.id
+                    }
+                }
+            },
             include: {
                 checkout: {
-                    include: {
+                    select: {
+                        metode_pembayaran: true,
+                        status: true,
+                        total: true,
+                        is_payment: true,
                         order: {
-                            include: {
+                            select: {
+                                Orders: {
+                                    include: true
+                                },
                                 ticket: {
                                     include: {
                                         schedule: {
                                             include: {
                                                 flight: {
                                                     include: {
+                                                        Plane: {
+                                                            include: {
+                                                                Airline: true
+                                                            }
+                                                        },
                                                         bandara_keberangkatan: true,
                                                         bandara_kedatangan: true
                                                     }
@@ -144,27 +169,9 @@ const getHistoryTransaction = async (req, res, next) => {
                                             }
                                         }
                                     }
-                                },
-                                user: {
-                                    select: {
-                                        id: true,
-                                        Profile: {
-                                            select: {
-                                                nama: true
-                                            }
-                                        }
-                                    }
                                 }
                             }
                         }
-                    }
-                }
-            },
-            where: {
-                id: historyTransactionId,
-                checkout: {
-                    order: {
-                        userId: users.id
                     }
                 }
             }
@@ -178,23 +185,23 @@ const getHistoryTransaction = async (req, res, next) => {
             });
         }
 
-        const checkout = historyTransaction.checkout;
-        const order = checkout.order;
-        const ticket = order.ticket;
-        const schedule = ticket.schedule;
+        const checkout = historyTransaction;
+        const order = checkout;
+        const ticket = order;
+        const schedule = ticket;
         const flight = schedule.flight;
-        const departureAirport = flight.bandara_keberangkatan;
-        const arrivalAirport = flight.bandara_kedatangan;
-        const user = order.user;
+        const departureAirport = flight;
+        const arrivalAirport = flight;
+        const user = users;
 
         const data = {
-            total_price: checkout.total,
+            total_price: checkout,
             class: ticket.kelas,
             timestamp: checkout.tanggal_waktu,
             passenger_id: user.id,
-            passenger_name: user.Profile ? user.Profile.nama : null,
-            departure_airport_name: departureAirport.nama_bandara,
-            arrival_airport_name: arrivalAirport.nama_bandara
+            passenger_name: profile ? profile.nama : null,
+            departure_airport_name: departureAirport,
+            arrival_airport_name: arrivalAirport
         };
 
         return res.status(200).json({
