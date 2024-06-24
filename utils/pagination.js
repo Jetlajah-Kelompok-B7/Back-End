@@ -6,13 +6,12 @@ const paginationUtils = (page, pageSize, totalRow) => {
     pageSize = parseInt(pageSize);
     totalRow = parseInt(totalRow);
 
-    let totalPage = Math.ceil(totalRow / pageSize)
+    let totalPage = Math.ceil(totalRow / pageSize);
 
-    
-    if(isNaN(totalPage)){
-        totalPage = 0
+    if (isNaN(totalPage)) {
+        totalPage = 0;
     }
-        
+
     return {
         current_page: page - 0,
         total_page: totalPage,
@@ -23,4 +22,6 @@ const paginationUtils = (page, pageSize, totalRow) => {
     };
 };
 
-module.exports = { paginationUtils }
+module.exports = {
+    paginationUtils
+};

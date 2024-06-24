@@ -311,7 +311,7 @@ const getTicketById = async (req, res, next) => {
                     cabin_baggage: ticket.schedule.flight.Plane.bagasi_kabin,
                     logo: ticket.schedule.flight.Plane.Airline.logo_maskapai
                 }
-            },
+            }
         };
 
         return res.status(200).json({
@@ -323,7 +323,7 @@ const getTicketById = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-}
+};
 
 module.exports = {
     getAllTickets,

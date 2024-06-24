@@ -22,7 +22,7 @@ const createOrder = async (req, res, next) => {
                 status: false,
                 message: "Users not found"
             });
-        };
+        }
 
         const ticket = await prisma.ticket.findUnique({
             where: {
@@ -57,7 +57,7 @@ const createOrder = async (req, res, next) => {
             is_baby: order.is_baby,
             negara_penerbit: order.negara_penerbit,
             berlaku_sampai: order.berlaku_sampai,
-            no_kursi: (lastOrder ? lastOrder.no_kursi : 0) + index + 1,
+            no_kursi: (lastOrder ? lastOrder.no_kursi : 0) + index + 1
         }));
 
         if (orderItems.length > ticket.jumlah) {
@@ -143,7 +143,7 @@ const listOrders = async (req, res, next) => {
                                 }
                             }
                         }
-                    }   
+                    }
                 },
                 Orders: true
             },
@@ -234,7 +234,7 @@ const getOrder = async (req, res, next) => {
                                 }
                             }
                         }
-                    }   
+                    }
                 },
                 Orders: true
             },

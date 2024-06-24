@@ -16,4 +16,7 @@ function getEndOfDay(date) {
     return d;
 }
 
-module.exports = { getStartOfDay, getEndOfDay }
+module.exports = {
+    getStartOfDay,
+    getEndOfDay
+};

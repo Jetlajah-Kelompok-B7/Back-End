@@ -1,4 +1,4 @@
-const nodemailer = require('nodemailer');
+const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
@@ -6,8 +6,10 @@ const transporter = nodemailer.createTransport({
     secure: true,
     auth: {
         user: process.env.EMAIL,
-        pass: process.env.PASSWORD,
-    },
+        pass: process.env.PASSWORD
+    }
 });
 
-module.exports = { transporter };
+module.exports = {
+    transporter
+};
