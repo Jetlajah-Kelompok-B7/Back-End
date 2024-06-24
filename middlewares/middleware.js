@@ -1,5 +1,7 @@
 const jwt = require("jsonwebtoken");
 const passport = require("../libs/passport");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 
 /**
  * @param {import("express").Request} req
@@ -16,14 +18,28 @@ const restrict = (req, res, next) => {
             });
         }
 
-        jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+        jwt.verify(token, process.env.JWT_SECRET, async (err, data) => {
             if (err) {
                 return res.status(401).json({
                     status: 401,
                     message: err.message
                 });
             }
-            delete user.iat;
+
+            const user = await prisma.user.findUnique({
+                where: {
+                    id: data.id
+                }
+            });
+
+            if (!user) {
+                return res.status(404).json({
+                    status: false,
+                    message: "User not found"
+                });
+            }
+
+            delete user.password;
             req.user = user;
             next();
         });
