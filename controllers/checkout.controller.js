@@ -73,6 +73,16 @@ const createCheckout = async (req, res, next) => {
             }
         });
 
+        await prisma.history_Transaction.create({
+            data: {
+                checkout: {
+                    connect: {
+                        id: newCheckout.id
+                    }
+                }
+            }
+        });
+
         return res.status(201).json({
             status: true,
             message: "Checkout successfully created",
@@ -228,7 +238,10 @@ const confirmCheckout = async (req, res, next) => {
             }
         });
 
-        await prisma.history_Transaction.create({
+        await prisma.history_Transaction.update({
+            where:{
+                id: updatedCheckout
+            },
             data: {
                 checkout: {
                     connect: {
