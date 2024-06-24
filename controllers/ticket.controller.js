@@ -123,6 +123,7 @@ const getAllTickets = async (req, res, next) => {
                                 bandara_keberangkatan: true,
                                 bandara_kedatangan: true,
                                 terminal_keberangkatan: true,
+                                terminal_kedatangan: true,
                                 status: true,
                                 Transit: {
                                     select: {
@@ -162,22 +163,26 @@ const getAllTickets = async (req, res, next) => {
         });
 
         const data = tickets.map(ticket => {
+            const hasTransit = ticket.schedule?.flight?.Transit && ticket.schedule.flight.Transit.length > 0;
             return {
                 id: ticket.id,
                 class: ticket.kelas,
                 price: ticket.harga,
                 status: ticket.schedule.flight.status,
                 jumlah: ticket.jumlah,
+                transit_status: hasTransit,
                 schedule: {
                     takeoff: {
                         time: ticket.schedule.keberangkatan,
                         airport_code: ticket.schedule.flight.bandara_keberangkatan.kode_bandara,
-                        airport_name: ticket.schedule.flight.bandara_keberangkatan.nama_bandara
+                        airport_name: ticket.schedule.flight.bandara_keberangkatan.nama_bandara,
+                        terminal: ticket.schedule.flight.terminal_keberangkatan
                     },
                     landing: {
                         time: ticket.schedule.kedatangan,
                         airport_code: ticket.schedule.flight.bandara_kedatangan.kode_bandara,
-                        airport_name: ticket.schedule.flight.bandara_kedatangan.nama_bandara
+                        airport_name: ticket.schedule.flight.bandara_kedatangan.nama_bandara,
+                        terminal: ticket.schedule.flight.terminal_kedatangan
                     },
                     transit: ticket.schedule.flight.Transit.map(transit => {
                         return {
