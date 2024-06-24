@@ -71,15 +71,11 @@ const register = async (req, res, next) => {
                 </div>
             `
             });
-
             delete newUser.password;
 
-            return res.status(201).json({
-                status: true,
-                message: "Created",
-                data: newUser
-            });
+            res.cookie("token", token, { httpOnly: true });
 
+            return res.redirect(process.env.REDIRECT_URL);
         });
     } catch (error) {
         next(error);
