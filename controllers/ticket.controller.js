@@ -325,7 +325,52 @@ const getTicketById = async (req, res, next) => {
     }
 };
 
+const createTicket = async (req, res, next) => {
+    const { bandara_kedatangan_id, bandara_keberangkatan_id, terminal_keberangkatan, terminal_kedatangan, transit, status, plane_id, jadwal_keberangkatan, jadwal_kedatangan, kelas, harga, bagasi, makanan, hiburan, wifi, usb, jumlah } = req.body;
+
+    const transitData = transit.map(airportId => ({ airportId }));
+
+    await prisma.flight.create({
+        data: {
+            bandara_keberangkatan_id: bandara_keberangkatan_id,
+            bandara_kedatangan_id: bandara_kedatangan_id,
+            terminal_keberangkatan,
+            terminal_kedatangan,
+            status,
+            planeId: plane_id,
+            Transit: {
+                create: transitData
+            },
+            Schedule: {
+                create: {
+                    keberangkatan: jadwal_keberangkatan,
+                    kedatangan: jadwal_kedatangan,
+                    Ticket: {
+                        create: {
+                            kelas,
+                            harga,
+                            bagasi,
+                            makanan,
+                            hiburan,
+                            wifi,
+                            usb,
+                            jumlah
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    return res.status(200).json({
+        status: true,
+        message: "Ticket created successfully"
+    });
+
+}
+
 module.exports = {
     getAllTickets,
-    getTicketById
+    getTicketById,
+    createTicket
 };
