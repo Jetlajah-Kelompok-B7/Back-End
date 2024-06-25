@@ -203,23 +203,7 @@ const createPin = async (req, res, next) => {
  */
 const changePassword = async (req, res, next) => {
     try {
-        const { password, confirmpassword } = req.body;
-
-        if (!password || !confirmpassword) {
-            return res.status(400).json({
-                status: false,
-                message: "Bad Request"
-            });
-        }
-
-        if (password !== confirmpassword) {
-            return res.status(401).json({
-                status: false,
-                message: "Password and confirm password does not match"
-            });
-        }
-
-        const encryptedPassword = await bcrypt.hash(password, 10);
+        const { oldPassword, password, confirmpassword } = req.body;
 
         const users = await prisma.user.findUnique({
             where: {
@@ -233,6 +217,30 @@ const changePassword = async (req, res, next) => {
                 message: "User not found"
             });
         }
+
+        if (!password || !confirmpassword || !oldPassword) {
+            return res.status(400).json({
+                status: false,
+                message: "Bad Request"
+            });
+        }
+
+        if (password !== confirmpassword) {
+            return res.status(401).json({
+                status: false,
+                message: "Password and confirm password does not match"
+            });
+        }
+
+        const isPasswordCorrect = await bcrypt.compare(oldPassword, users.password);
+        if (!isPasswordCorrect) {
+            return res.status(401).json({
+                status: false,
+                message: "invalid password!"
+            });
+        }
+
+        const encryptedPassword = await bcrypt.hash(password, 10);
 
         await prisma.user.update({
             data: {
