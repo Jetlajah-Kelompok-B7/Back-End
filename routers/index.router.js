@@ -6,6 +6,8 @@ const auth = require("./auth.router");
 const user = require("./user.router");
 const ticket = require("./ticket.router");
 const airport = require("./airport.router");
+const plane = require("./plane.router");
+const { pipeline } = require("nodemailer/lib/xoauth2");
 
 app.get("/", (req, res) => {
     const routes = {};
@@ -27,5 +29,6 @@ app.use("/order", order);
 app.use("/history", history);
 app.use("/ticket", ticket);
 app.use("/airport", airport);
+app.use("/plane", plane);
 
 module.exports = app;
