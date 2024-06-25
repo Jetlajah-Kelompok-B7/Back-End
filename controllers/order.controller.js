@@ -83,8 +83,37 @@ const createOrder = async (req, res, next) => {
                 Orders: {
                     create: orderItems
                 }
+            },
+            include: {
+                ticket: {
+                    select: {
+                        harga: true
+                    }
+                },
+                Orders: true
             }
         });
+
+        const order = await prisma.order.findUnique({
+            include: {
+                ticket: {
+                    select: {
+                        harga: true
+                    }
+                },
+                Orders: true
+            },
+            where: {
+                id: newOrder.id,
+                userId: users.id
+            }
+        });
+
+        const total = order.Orders.length * order.ticket.harga;
+        const preTax = total + (total / 100 * 10);
+
+        const net = preTax / (1 + 10 / 100);
+        const tax = Math.round((preTax - net) * 100) / 100;
 
         await prisma.notification.create({
             data: {
@@ -99,10 +128,49 @@ const createOrder = async (req, res, next) => {
             }
         });
 
+        const newCheckout = await prisma.checkout.create({
+            data: {
+                total: preTax,
+                tanggal_waktu,
+                order: {
+                    connect: {
+                        id: order.id
+                    }
+                }
+            }
+        });
+
+        const checkout = await prisma.checkout.findUnique({
+            where: {
+                id: newCheckout.id
+            },
+            select: {
+                total: true
+            }
+        });
+
+        await prisma.history_Transaction.create({
+            data: {
+                checkout: {
+                    connect: {
+                        id: newCheckout.id
+                    }
+                }
+            }
+        });
+
+        const data = {
+            ...order,
+            price: {
+                price: checkout.total,
+                tax: tax
+            }
+        };
+
         return res.status(201).json({
             status: true,
             message: "Order created successfully",
-            data: newOrder
+            data
         });
     } catch (error) {
         next(error);
