@@ -74,7 +74,34 @@ const getCheckout = async (req, res, next) => {
 
         const checkout = await prisma.checkout.findUnique({
             include: {
-                order: true,
+                order: {
+                    include: {
+                        Orders: {
+                            include: true
+                        },
+                        ticket: {
+                            include: {
+                                schedule: {
+                                    include: {
+                                        flight: {
+                                            include: {
+                                                bandara_keberangkatan: true,
+                                                bandara_kedatangan: true,
+                                                Plane: {
+                                                    include: {
+                                                        Airline: {
+                                                            include: true
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
                 History_Transaction: true
             },
             where: {
@@ -92,10 +119,47 @@ const getCheckout = async (req, res, next) => {
             });
         }
 
+        const total = checkout.order.Orders.length * checkout.order.ticket.harga;
+        const preTax = total + (total / 100 * 10);
+
+        const net = preTax / (1 + 10 / 100);
+        const tax = Math.round((preTax - net) * 100) / 100;
+
+        const data = {
+            id: checkout.id,
+            metode_pembayaran: checkout.metode_pembayaran,
+            is_payment: checkout.is_payment,
+            total: checkout.total,
+            tax: tax,
+            tanggal_waktu: checkout.tanggal_waktu,
+            status: checkout.status,
+            orderId: checkout.orderId,
+            bandara_keberangkatan: {
+                ...checkout.order.ticket.schedule.flight.bandara_keberangkatan,
+                terminal_kedatangan: checkout.order.ticket.schedule.flight.terminal_kedatangan
+            },
+            bandara_kedatangan: {
+                ...checkout.order.ticket.schedule.flight.bandara_kedatangan,
+                terminal_kedatangan: checkout.order.ticket.schedule.flight.terminal_keberangkatan
+            },
+            maskapai: {
+                ...checkout.order.ticket.schedule.flight.Plane.Airline
+            },
+            informasi: {
+                bagasi: checkout.order.ticket.schedule.flight.Plane.bagasi,
+                bagasi_kabin: checkout.order.ticket.schedule.flight.Plane.bagasi_kabin,
+                makanan: checkout.order.ticket.makanan,
+                hiburan: checkout.order.ticket.hiburan,
+                wifi: checkout.order.ticket.wifi,
+                usb: checkout.order.ticket.usb,
+                jumlah: checkout.order.ticket.jumlah
+            }
+        };
+
         return res.status(200).json({
             status: true,
             message: "Checkout retrieved successfully",
-            data: checkout
+            data
         });
     } catch (error) {
         next(error);
