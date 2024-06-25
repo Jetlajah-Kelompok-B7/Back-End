@@ -37,9 +37,34 @@ const listHistoryTransactions = async (req, res, next) => {
                                         schedule: {
                                             include: {
                                                 flight: {
-                                                    include: {
+                                                    select: {
                                                         bandara_keberangkatan: true,
-                                                        bandara_kedatangan: true
+                                                        bandara_kedatangan: true,
+                                                        terminal_kedatangan: true,
+                                                        terminal_keberangkatan: true,
+                                                        Plane: {
+                                                            select: {
+                                                                Airline: {
+                                                                    select: {
+                                                                        nama_maskapai: true,
+                                                                        kode_maskapai: true,
+                                                                        logo_maskapai: true
+                                                                    }
+                                                                },
+                                                                Flight: {
+                                                                    select: {
+                                                                        bandara_keberangkatan: {
+                                                                            include: true
+                                                                        },
+                                                                        bandara_kedatangan: {
+                                                                            include: true
+                                                                        },
+                                                                        terminal_keberangkatan: true,
+                                                                        terminal_kedatangan: true
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             }
@@ -78,15 +103,20 @@ const listHistoryTransactions = async (req, res, next) => {
             const ticket = order.ticket;
             const schedule = ticket.schedule;
             const flight = schedule.flight;
+            const airline = flight.Plane.Airline;
             const departureAirport = flight.bandara_keberangkatan;
             const arrivalAirport = flight.bandara_kedatangan;
+            const departureTerminal = flight.terminal_keberangkatan;
 
             return {
                 id: ht.id,
                 timestamp: checkout.tanggal_waktu,
-                departure_airport_name: departureAirport.nama_bandara,
-                arrival_airport_name: arrivalAirport.nama_bandara,
+                bandara_keberangkatan: departureAirport,
+                bandara_kedatangan: arrivalAirport,
+                terminal: departureTerminal,
                 status: checkout.is_payment ? "Issued" : "Unpaid",
+                nama_maskapai: airline.nama_maskapai,
+                kode_maskapai: airline.kode_maskapai,
                 flight_date: schedule.tanggal_berangkat,
                 flight_time: schedule.waktu_berangkat
             };
