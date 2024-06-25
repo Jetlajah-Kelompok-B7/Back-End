@@ -6,98 +6,6 @@ const prisma = new PrismaClient();
  * @param {import("express").Response} res
  * @param {import("express").NextFunction} next
  */
-const createCheckout = async (req, res, next) => {
-    const orderParams = Number(req.params.id);
-
-    try {
-        if (!orderParams) {
-            return res.status(400).json({
-                status: false,
-                message: "Bad Request"
-            });
-        }
-
-        const users = await prisma.user.findUnique({
-            where: {
-                id: req.user.id
-            }
-        });
-
-        if (!users) {
-            return res.status(401).json({
-                status: false,
-                message: "Users not found"
-            });
-        }
-
-        const exists = await prisma.checkout.findUnique({
-            where: {
-                orderId: orderParams,
-                order: {
-                    userId: users.id
-                }
-            }
-        });
-
-        if (exists) {
-            return res.status(400).json({
-                status: false,
-                message: "Bad Request"
-            });
-        }
-
-        const order = await prisma.order.findMany({
-            include: {
-                ticket: {
-                    select: {
-                        harga: true
-                    }
-                }
-            },
-            where: {
-                id: orderParams,
-                userId: users.id
-            }
-        });
-
-        const total = order.reduce((acc, curr) => acc + curr.ticket.harga, 0);
-
-        const newCheckout = await prisma.checkout.create({
-            data: {
-                total: total,
-                order: {
-                    connect: {
-                        id: orderParams
-                    }
-                }
-            }
-        });
-
-        await prisma.history_Transaction.create({
-            data: {
-                checkout: {
-                    connect: {
-                        id: newCheckout.id
-                    }
-                }
-            }
-        });
-
-        return res.status(201).json({
-            status: true,
-            message: "Checkout successfully created",
-            data: newCheckout
-        });
-    } catch (error) {
-        next(error);
-    }
-};
-
-/**
- * @param {import("express").Request} req
- * @param {import("express").Response} res
- * @param {import("express").NextFunction} next
- */
 const listCheckouts = async (req, res, next) => {
     try {
         const users = await prisma.user.findUnique({
@@ -301,7 +209,6 @@ const deleteCheckout = async (req, res, next) => {
 };
 
 module.exports = {
-    createCheckout,
     listCheckouts,
     getCheckout,
     confirmCheckout,
