@@ -215,23 +215,20 @@ const getHistoryTransaction = async (req, res, next) => {
             });
         }
 
-        const checkout = historyTransaction;
-        const order = checkout;
-        const ticket = order;
-        const schedule = ticket;
-        const flight = schedule.flight;
-        const departureAirport = flight;
-        const arrivalAirport = flight;
-        const user = users;
+        const checkout = historyTransaction.checkout;
+
+        const total = checkout.order.Orders.length * checkout.order.ticket.harga;
+        const preTax = total + (total / 100 * 10);
+
+        const net = preTax / (1 + 10 / 100);
+        const tax = Math.round((preTax - net) * 100) / 100;
 
         const data = {
-            total_price: checkout,
-            class: ticket.kelas,
-            timestamp: checkout.tanggal_waktu,
-            passenger_id: user.id,
-            passenger_name: profile ? profile.nama : null,
-            departure_airport_name: departureAirport,
-            arrival_airport_name: arrivalAirport
+            price: {
+                total: checkout.total,
+                tax: tax,
+            },
+            ...historyTransaction
         };
 
         return res.status(200).json({
