@@ -1,5 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const qr = require("qr-image");
+const imagekit = require("../libs/imagekit");
 
 /**
  * @param {import("express").Request} req
@@ -145,6 +147,9 @@ const getCheckout = async (req, res, next) => {
             maskapai: {
                 ...checkout.order.ticket.schedule.flight.Plane.Airline
             },
+            orders: {
+                ...checkout.order.Orders
+            },
             informasi: {
                 bagasi: checkout.order.ticket.schedule.flight.Plane.bagasi,
                 bagasi_kabin: checkout.order.ticket.schedule.flight.Plane.bagasi_kabin,
@@ -222,7 +227,7 @@ const confirmCheckout = async (req, res, next) => {
                     }
                 }
             },
-            where:{
+            where: {
                 id: updatedCheckout.History_Transaction.id
             }
         });
@@ -244,6 +249,85 @@ const confirmCheckout = async (req, res, next) => {
             status: true,
             message: "Your ticket order has been successfully paid. Thank you for your purchase!",
             data: updatedCheckout
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
+const printCheckout = async (req, res, next) => {
+    try {
+        const params = Number(req.params.id);
+
+        if (!params) {
+            return res.status(400).json({
+                status: false,
+                message: "Bad Request"
+            });
+        }
+
+        const users = await prisma.user.findUnique({
+            where: {
+                id: req.user.id
+            }
+        });
+
+        if (!users) {
+            return res.status(401).json({
+                status: false,
+                message: "Users not found"
+            });
+        }
+
+        const data = await prisma.checkout.findUnique({
+            include: {
+                order: {
+                    include: true
+                },
+                History_Transaction: {
+                    include: true
+                }
+            },
+            where: {
+                id: params,
+                order: {
+                    userId: users.id
+                }
+            }
+        });
+
+        if (!data) {
+            return res.status(404).json({
+                status: false,
+                message: "Data not found"
+            });
+        }
+
+        if (data.is_payment === false) {
+            return res.status(403).json({
+                status: false,
+                message: "Order belum dibayar"
+            });
+        }
+
+        const qrCode = qr.imageSync(`${req.protocol}://${req.get("host")}/api/checkout/${data.id}`, { type: "png" });
+        const imageKIT = await imagekit.upload({
+            fileName: Date.now() + ".png",
+            file: qrCode.toString("base64")
+        });
+
+        return res.status(200).json({
+            status: false,
+            message: "OK",
+            data: {
+                ...data,
+                qr_code_url: imageKIT.url
+            }
         });
     } catch (error) {
         next(error);
@@ -280,5 +364,6 @@ module.exports = {
     listCheckouts,
     getCheckout,
     confirmCheckout,
-    deleteCheckout
+    deleteCheckout,
+    printCheckout
 };
