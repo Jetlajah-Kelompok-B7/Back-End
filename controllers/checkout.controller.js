@@ -2,6 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const qr = require("qr-image");
 const imagekit = require("../libs/imagekit");
+const crypto = require("node:crypto");
 const { convertISO } = require("../utils/isoConverter");
 const { moneyFormat } = require("../utils/moneyFormat");
 
@@ -123,6 +124,10 @@ const getCheckout = async (req, res, next) => {
             });
         }
 
+        const order = checkout.order;
+
+        const hashIdOrder = crypto.createHash("sha256").update(order.id.toString()).digest("hex").slice(0, 7);
+
         const total = checkout.order.Orders.length * checkout.order.ticket.harga;
         const preTax = total + (total / 100 * 10);
 
@@ -131,6 +136,7 @@ const getCheckout = async (req, res, next) => {
 
         const data = {
             id: checkout.id,
+            booking_code: hashIdOrder,
             metode_pembayaran: checkout.metode_pembayaran,
             is_payment: checkout.is_payment,
             total: checkout.total,
@@ -430,7 +436,7 @@ const printView = async (req, res, next) => {
             model: data.order.ticket.schedule.flight.Plane.model_pesawat,
             logo: data.order.ticket.schedule.flight.Plane.Airline.logo_maskapai
         }
-    }
+    };
 
     if (!data) {
         return res.status(404).json({
@@ -441,7 +447,7 @@ const printView = async (req, res, next) => {
 
     return res.render("ticket", { data: dataTest });
 
-}
+};
 
 module.exports = {
     listCheckouts,

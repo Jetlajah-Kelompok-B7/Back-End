@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const { paginationUtils } = require("../utils/pagination");
 const prisma = new PrismaClient();
+const crypto = require("node:crypto");
 
 /**
  * @param {import("express").Request} req
@@ -177,7 +178,7 @@ const getHistoryTransaction = async (req, res, next) => {
                         total: true,
                         is_payment: true,
                         order: {
-                            select: {
+                            include: {
                                 Orders: {
                                     include: true
                                 },
@@ -223,11 +224,16 @@ const getHistoryTransaction = async (req, res, next) => {
         const net = preTax / (1 + 10 / 100);
         const tax = Math.round((preTax - net) * 100) / 100;
 
+        const order = checkout.order;
+
+        const hashIdOrder = crypto.createHash("sha256").update(order.id.toString()).digest("hex").slice(0, 7);
+
         const data = {
             price: {
                 total: checkout.total,
                 tax: tax,
             },
+            booking_code: hashIdOrder,
             ...historyTransaction
         };
 
