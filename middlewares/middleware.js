@@ -65,7 +65,7 @@ const authGoogle = passport.authenticate("google", {
 });
 
 const authGoogleCallback = passport.authenticate("google", {
-    failureRedirect: "/api/login/google",
+    failureRedirect: "/api/auth/google",
     session: false
 });
 
