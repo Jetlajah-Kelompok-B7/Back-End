@@ -2,6 +2,8 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const qr = require("qr-image");
 const imagekit = require("../libs/imagekit");
+const { convertISO } = require("../utils/isoConverter");
+const { moneyFormat } = require("../utils/moneyFormat");
 
 /**
  * @param {import("express").Request} req
@@ -285,13 +287,9 @@ const printCheckout = async (req, res, next) => {
         }
 
         const data = await prisma.checkout.findUnique({
-            include: {
-                order: {
-                    include: true
-                },
-                History_Transaction: {
-                    include: true
-                }
+            select: {
+                id: true,
+                is_payment: true
             },
             where: {
                 id: params,
@@ -315,7 +313,7 @@ const printCheckout = async (req, res, next) => {
             });
         }
 
-        const qrCode = qr.imageSync(`${req.protocol}://${req.get("host")}/api/checkout/${data.id}`, { type: "png" });
+        const qrCode = qr.imageSync(`${req.protocol}://${req.get("host")}/api/checkout/${data.id}/view`, { type: "png" });
         const imageKIT = await imagekit.upload({
             fileName: Date.now() + ".png",
             file: qrCode.toString("base64")
@@ -325,7 +323,6 @@ const printCheckout = async (req, res, next) => {
             status: false,
             message: "OK",
             data: {
-                ...data,
                 qr_code_url: imageKIT.url
             }
         });
@@ -360,10 +357,97 @@ const deleteCheckout = async (req, res, next) => {
     }
 };
 
+const printView = async (req, res, next) => {
+    const params = Number(req.params.id);
+
+    if (!params) {
+        return res.status(400).json({
+            status: false,
+            message: "Bad Request"
+        });
+    }
+
+    const data = await prisma.checkout.findUnique({
+        include: {
+            order: {
+                include: {
+                    Checkout: true,
+                    Orders: true,
+                    ticket: {
+                        include: {
+                            schedule: {
+                                include: {
+                                    flight: {
+                                        include: {
+                                            bandara_keberangkatan: true,
+                                            bandara_kedatangan: true,
+                                            Plane: {
+                                                include: {
+                                                    Airline: true
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            History_Transaction: {
+                include: true
+            }
+        },
+        where: {
+            id: params
+        }
+    });
+
+    const dataTest = {
+        id: data.order.ticket.id,
+        class: data.order.ticket.kelas,
+        chair: data.order.Orders.map(order => order.no_kursi),
+        total_chair: data.order.Orders.map(order => order.no_kursi).length,
+        price: moneyFormat(data.order.Checkout.total),
+        schedule: {
+            takeoff: {
+                airport: data.order.ticket.schedule.flight.bandara_keberangkatan.nama_bandara,
+                location: data.order.ticket.schedule.flight.bandara_keberangkatan.lokasi,
+                code: data.order.ticket.schedule.flight.bandara_keberangkatan.kode_bandara,
+                time: convertISO(data.order.ticket.schedule.keberangkatan),
+                terminal: data.order.ticket.schedule.flight.terminal_keberangkatan
+            },
+            landing: {
+                airport: data.order.ticket.schedule.flight.bandara_kedatangan.nama_bandara,
+                location: data.order.ticket.schedule.flight.bandara_kedatangan.lokasi,
+                code: data.order.ticket.schedule.flight.bandara_kedatangan.kode_bandara,
+                time: convertISO(data.order.ticket.schedule.kedatangan)
+            }
+        },
+        plane: {
+            name: data.order.ticket.schedule.flight.Plane.Airline.nama_maskapai,
+            code: data.order.ticket.schedule.flight.Plane.kode_pesawat,
+            model: data.order.ticket.schedule.flight.Plane.model_pesawat,
+            logo: data.order.ticket.schedule.flight.Plane.Airline.logo_maskapai
+        }
+    }
+
+    if (!data) {
+        return res.status(404).json({
+            status: false,
+            message: "Data not found"
+        });
+    }
+
+    return res.render("ticket", { data: dataTest });
+
+}
+
 module.exports = {
     listCheckouts,
     getCheckout,
     confirmCheckout,
     deleteCheckout,
-    printCheckout
+    printCheckout,
+    printView
 };
