@@ -203,7 +203,11 @@ const confirmCheckout = async (req, res, next) => {
             data: {
                 metode_pembayaran,
                 tanggal_waktu,
-                is_payment: true
+                is_payment: true,
+                status: "Paid"
+            },
+            include: {
+                History_Transaction: true
             },
             where: {
                 id: checkoutId
@@ -211,15 +215,15 @@ const confirmCheckout = async (req, res, next) => {
         });
 
         await prisma.history_Transaction.update({
-            where:{
-                id: updatedCheckout
-            },
             data: {
                 checkout: {
                     connect: {
                         id: updatedCheckout.id
                     }
                 }
+            },
+            where:{
+                id: updatedCheckout.History_Transaction.id
             }
         });
 
