@@ -145,6 +145,8 @@ const createOrder = async (req, res, next) => {
                 id: newCheckout.id
             },
             select: {
+                id: true,
+                is_payment: true,
                 total: true
             }
         });
@@ -160,6 +162,7 @@ const createOrder = async (req, res, next) => {
         });
 
         const data = {
+            ...checkout,
             ...order,
             price: {
                 price: checkout.total,
