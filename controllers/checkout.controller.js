@@ -203,7 +203,8 @@ const confirmCheckout = async (req, res, next) => {
             data: {
                 metode_pembayaran,
                 tanggal_waktu,
-                is_payment: true
+                is_payment: true,
+                status: "Paid"
             },
             include: {
                 History_Transaction: true
