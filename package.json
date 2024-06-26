@@ -5,8 +5,7 @@
   "type": "commonjs",
   "main": "app.js",
   "scripts": {
-    "postinstall": "prisma generate && prisma migrate deploy",
-    "dev": "npx eslint . && nodemon app.js",
+    "dev": "nodemon app.js",
     "start": "node app.js"
   },
   "prisma": {
@@ -32,7 +31,8 @@
     "nodemailer": "^6.9.14",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
-    "prisma": "^5.15.1"
+    "prisma": "^5.15.1",
+    "qr-image": "^3.2.0"
   },
   "devDependencies": {
     "eslint": "^8.57.0"
