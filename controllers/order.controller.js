@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const crypto = require("node:crypto");
 
 /**
  * @param {import("express").Request} req
@@ -161,9 +162,12 @@ const createOrder = async (req, res, next) => {
             }
         });
 
+        const hashIdOrder = crypto.createHash("sha256").update(order.id.toString()).digest("hex").slice(0, 7);
+
         const data = {
             ...checkout,
             ...order,
+            booking_code: hashIdOrder,
             price: {
                 price: checkout.total,
                 tax: tax
