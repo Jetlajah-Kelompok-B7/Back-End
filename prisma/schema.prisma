@@ -190,6 +190,7 @@ model Checkout {
     is_payment          Boolean              @default(false)
     total               Int
     tanggal_waktu       DateTime?            @db.Timestamptz()
+    berlaku_sampai      DateTime?            @db.Timestamptz()
     status              CheckoutStatus       @default(Unpaid)
     order               Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
     orderId             Int                  @unique
