@@ -322,7 +322,7 @@ const printCheckout = async (req, res, next) => {
         });
 
         return res.status(200).json({
-            status: false,
+            status: true,
             message: "OK",
             data: {
                 ...data,
