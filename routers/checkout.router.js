@@ -7,6 +7,6 @@ app.get("/:id/print", restrict, printCheckout);
 app.post("/:id", restrict, confirmCheckout);
 app.get("/:id", restrict, getCheckout);
 app.delete("/:id", restrict, deleteCheckout);
-app.get("/:id/view", printView);
+app.get("/:id/view", restrict, printView);
 
 module.exports = app;
