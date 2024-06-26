@@ -75,7 +75,7 @@ const register = async (req, res, next) => {
 
             res.cookie("token", token, { httpOnly: true });
 
-            return res.redirect(process.env.REDIRECT_URL);
+            return res.redirect(`${req.get("origin")}`);
         });
     } catch (error) {
         next(error);
@@ -127,8 +127,7 @@ const login = async (req, res, next) => {
         const token = jwt.sign(user, process.env.JWT_SECRET);
 
         res.cookie("token", token, { httpOnly: true });
-
-        return res.redirect(process.env.REDIRECT_URL);
+        return res.redirect(`${req.get("origin")}`);
     } catch (error) {
         next(error);
     }
@@ -143,7 +142,7 @@ const logout = async (req, res, next) => {
     try {
         res.clearCookie("token", { httpOnly: true });
 
-        return res.redirect(`${process.env.REDIRECT_URL}/login`);
+        return res.redirect(`${req.get("origin")}/login`);
     } catch (error) {
         next(error);
     }
@@ -203,23 +202,7 @@ const createPin = async (req, res, next) => {
  */
 const changePassword = async (req, res, next) => {
     try {
-        const { password, confirmpassword } = req.body;
-
-        if (!password || !confirmpassword) {
-            return res.status(400).json({
-                status: false,
-                message: "Bad Request"
-            });
-        }
-
-        if (password !== confirmpassword) {
-            return res.status(401).json({
-                status: false,
-                message: "Password and confirm password does not match"
-            });
-        }
-
-        const encryptedPassword = await bcrypt.hash(password, 10);
+        const { oldPassword, password, confirmpassword } = req.body;
 
         const users = await prisma.user.findUnique({
             where: {
@@ -233,6 +216,30 @@ const changePassword = async (req, res, next) => {
                 message: "User not found"
             });
         }
+
+        if (!password || !confirmpassword || !oldPassword) {
+            return res.status(400).json({
+                status: false,
+                message: "Bad Request"
+            });
+        }
+
+        if (password !== confirmpassword) {
+            return res.status(401).json({
+                status: false,
+                message: "Password and confirm password does not match"
+            });
+        }
+
+        const isPasswordCorrect = await bcrypt.compare(oldPassword, users.password);
+        if (!isPasswordCorrect) {
+            return res.status(401).json({
+                status: false,
+                message: "invalid password!"
+            });
+        }
+
+        const encryptedPassword = await bcrypt.hash(password, 10);
 
         await prisma.user.update({
             data: {
@@ -530,7 +537,7 @@ const googleOAuth2 = async (req, res, next) => {
 
         res.cookie("token", token, { httpOnly: true });
 
-        return res.redirect(process.env.REDIRECT_URL);
+        return res.redirect(`${req.get("origin")}`);
     } catch (error) {
         next(error);
     }
