@@ -200,9 +200,70 @@ const createPin = async (req, res, next) => {
  * @param {import("express").Response} res
  * @param {import("express").NextFunction} next
  */
+const changePin = async (req, res, next) => {
+    try {
+        const { oldPin, newPin, confirmPin } = req.body;
+
+        if (!oldPin || !newPin || !confirmPin) {
+            return res.status(400).json({
+                status: false,
+                message: "Bad Request"
+            });
+        }
+
+        if (newPin !== confirmPin) {
+            return res.status(400).json({
+                status: false,
+                message: "Bad Request"
+            });
+        }
+
+        const users = await prisma.profile.findUnique({
+            where: {
+                id: req.user.id
+            }
+        });
+
+        if (!users) {
+            return res.status(401).json({
+                status: false,
+                message: "invalid email or password!"
+            });
+        }
+
+        if (users.pin !== Number(oldPin)) {
+            return res.status(401).json({
+                status: false,
+                message: "invalid pin"
+            });
+        }
+
+        await prisma.profile.update({
+            data: {
+                pin: Number(newPin)
+            },
+            where: {
+                userId: users.id
+            }
+        });
+
+        return res.status(200).json({
+            status: true,
+            message: "OK"
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+/**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
 const changePassword = async (req, res, next) => {
     try {
-        const { oldPassword, password, confirmpassword } = req.body;
+        const { oldPassword, password, confirmPassword } = req.body;
 
         const users = await prisma.user.findUnique({
             where: {
@@ -217,14 +278,14 @@ const changePassword = async (req, res, next) => {
             });
         }
 
-        if (!password || !confirmpassword || !oldPassword) {
+        if (!password || !confirmPassword || !oldPassword) {
             return res.status(400).json({
                 status: false,
                 message: "Bad Request"
             });
         }
 
-        if (password !== confirmpassword) {
+        if (password !== confirmPassword) {
             return res.status(401).json({
                 status: false,
                 message: "Password and confirm password does not match"
@@ -537,7 +598,7 @@ const googleOAuth2 = async (req, res, next) => {
 
         res.cookie("token", token, { httpOnly: true });
 
-        return res.redirect(`${req.get("origin")}`);
+        return res.redirect(`${process.env.REDIRECT_URL}`);
     } catch (error) {
         next(error);
     }
@@ -607,6 +668,7 @@ module.exports = {
     login,
     logout,
     createPin,
+    changePin,
     forgotPin,
     changePassword,
     pinValidation,
