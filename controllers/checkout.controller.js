@@ -172,7 +172,7 @@ const getCheckout = async (req, res, next) => {
  * @param {import("express").NextFunction} next
  */
 const confirmCheckout = async (req, res, next) => {
-    const orderId = Number(req.params.id);
+    const checkoutId = Number(req.params.id);
     const {
         metode_pembayaran
     } = req.body;
@@ -206,7 +206,7 @@ const confirmCheckout = async (req, res, next) => {
                 is_payment: true
             },
             where: {
-                orderId: orderId
+                id: checkoutId
             }
         });
 
