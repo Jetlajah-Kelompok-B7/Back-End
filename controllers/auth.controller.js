@@ -75,7 +75,7 @@ const register = async (req, res, next) => {
 
             res.cookie("token", token, { httpOnly: true });
 
-            return res.redirect(`${req.protocol}://${req.get("host")}`);
+            return res.redirect(`${req.get("origin")}`);
         });
     } catch (error) {
         next(error);
@@ -127,8 +127,7 @@ const login = async (req, res, next) => {
         const token = jwt.sign(user, process.env.JWT_SECRET);
 
         res.cookie("token", token, { httpOnly: true });
-
-        return res.redirect(`${req.protocol}://${req.get("host")}`);
+        return res.redirect(`${req.get("origin")}`);
     } catch (error) {
         next(error);
     }
@@ -143,7 +142,7 @@ const logout = async (req, res, next) => {
     try {
         res.clearCookie("token", { httpOnly: true });
 
-        return res.redirect(`${req.protocol}://${req.get("host")}/login`);
+        return res.redirect(`${req.get("origin")}/login`);
     } catch (error) {
         next(error);
     }
@@ -538,7 +537,7 @@ const googleOAuth2 = async (req, res, next) => {
 
         res.cookie("token", token, { httpOnly: true });
 
-        return res.redirect(`${req.protocol}://${req.get("host")}`);
+        return res.redirect(`${req.get("origin")}`);
     } catch (error) {
         next(error);
     }
