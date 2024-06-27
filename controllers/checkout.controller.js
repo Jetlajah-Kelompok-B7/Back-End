@@ -211,7 +211,35 @@ const confirmCheckout = async (req, res, next) => {
             });
         }
 
+        const expired = await prisma.checkout.findUnique({
+            where: {
+                id: checkoutId
+            }
+        });
+
         const tanggal_waktu = new Date();
+
+        if (expired.berlaku_sampai < tanggal_waktu) {
+            await prisma.checkout.update({
+                data: {
+                    tanggal_waktu,
+                    is_payment: false,
+                    status: "Cancelled"
+                },
+                where: {
+                    id: checkoutId,
+                    order: {
+                        userId: users.id
+                    }
+                }
+            });
+
+            return res.status(401).json({
+                status: false,
+                message: "The order has expired."
+            });
+        }
+
         const updatedCheckout = await prisma.checkout.update({
             data: {
                 metode_pembayaran,
@@ -223,7 +251,10 @@ const confirmCheckout = async (req, res, next) => {
                 History_Transaction: true
             },
             where: {
-                id: checkoutId
+                id: checkoutId,
+                order: {
+                    userId: users.id
+                }
             }
         });
 
@@ -363,33 +394,53 @@ const deleteCheckout = async (req, res, next) => {
     }
 };
 
+/**
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
 const printView = async (req, res, next) => {
-    const params = Number(req.params.id);
+    try {
+        const params = Number(req.params.id);
 
-    if (!params) {
-        return res.status(400).json({
-            status: false,
-            message: "Bad Request"
+        if (!params) {
+            return res.status(400).json({
+                status: false,
+                message: "Bad Request"
+            });
+        }
+
+        const users = await prisma.user.findUnique({
+            where: {
+                id: req.user.id
+            }
         });
-    }
 
-    const data = await prisma.checkout.findUnique({
-        include: {
-            order: {
-                include: {
-                    Checkout: true,
-                    Orders: true,
-                    ticket: {
-                        include: {
-                            schedule: {
-                                include: {
-                                    flight: {
-                                        include: {
-                                            bandara_keberangkatan: true,
-                                            bandara_kedatangan: true,
-                                            Plane: {
-                                                include: {
-                                                    Airline: true
+        if (!users) {
+            res.status(404).json({
+                status: false,
+                message: "User not found"
+            });
+        }
+
+        const data = await prisma.checkout.findUnique({
+            include: {
+                order: {
+                    include: {
+                        Checkout: true,
+                        Orders: true,
+                        ticket: {
+                            include: {
+                                schedule: {
+                                    include: {
+                                        flight: {
+                                            include: {
+                                                bandara_keberangkatan: true,
+                                                bandara_kedatangan: true,
+                                                Plane: {
+                                                    include: {
+                                                        Airline: true
+                                                    }
                                                 }
                                             }
                                         }
@@ -398,55 +449,56 @@ const printView = async (req, res, next) => {
                             }
                         }
                     }
+                },
+                History_Transaction: {
+                    include: true
                 }
             },
-            History_Transaction: {
-                include: true
+            where: {
+                id: params
             }
-        },
-        where: {
-            id: params
-        }
-    });
-
-    const dataTest = {
-        id: data.order.ticket.id,
-        class: data.order.ticket.kelas,
-        chair: data.order.Orders.map(order => order.no_kursi),
-        total_chair: data.order.Orders.map(order => order.no_kursi).length,
-        price: moneyFormat(data.order.Checkout.total),
-        schedule: {
-            takeoff: {
-                airport: data.order.ticket.schedule.flight.bandara_keberangkatan.nama_bandara,
-                location: data.order.ticket.schedule.flight.bandara_keberangkatan.lokasi,
-                code: data.order.ticket.schedule.flight.bandara_keberangkatan.kode_bandara,
-                time: convertISO(data.order.ticket.schedule.keberangkatan),
-                terminal: data.order.ticket.schedule.flight.terminal_keberangkatan
-            },
-            landing: {
-                airport: data.order.ticket.schedule.flight.bandara_kedatangan.nama_bandara,
-                location: data.order.ticket.schedule.flight.bandara_kedatangan.lokasi,
-                code: data.order.ticket.schedule.flight.bandara_kedatangan.kode_bandara,
-                time: convertISO(data.order.ticket.schedule.kedatangan)
-            }
-        },
-        plane: {
-            name: data.order.ticket.schedule.flight.Plane.Airline.nama_maskapai,
-            code: data.order.ticket.schedule.flight.Plane.kode_pesawat,
-            model: data.order.ticket.schedule.flight.Plane.model_pesawat,
-            logo: data.order.ticket.schedule.flight.Plane.Airline.logo_maskapai
-        }
-    };
-
-    if (!data) {
-        return res.status(404).json({
-            status: false,
-            message: "Data not found"
         });
+
+        if (!data) {
+            return res.status(404).json({
+                status: false,
+                message: "Data not found"
+            });
+        }
+
+        const dataTest = {
+            id: data.order.ticket.id,
+            class: data.order.ticket.kelas,
+            chair: data.order.Orders.map(order => order.no_kursi),
+            total_chair: data.order.Orders.map(order => order.no_kursi).length,
+            price: moneyFormat(data.order.Checkout.total),
+            schedule: {
+                takeoff: {
+                    airport: data.order.ticket.schedule.flight.bandara_keberangkatan.nama_bandara,
+                    location: data.order.ticket.schedule.flight.bandara_keberangkatan.lokasi,
+                    code: data.order.ticket.schedule.flight.bandara_keberangkatan.kode_bandara,
+                    time: convertISO(data.order.ticket.schedule.keberangkatan),
+                    terminal: data.order.ticket.schedule.flight.terminal_keberangkatan
+                },
+                landing: {
+                    airport: data.order.ticket.schedule.flight.bandara_kedatangan.nama_bandara,
+                    location: data.order.ticket.schedule.flight.bandara_kedatangan.lokasi,
+                    code: data.order.ticket.schedule.flight.bandara_kedatangan.kode_bandara,
+                    time: convertISO(data.order.ticket.schedule.kedatangan)
+                }
+            },
+            plane: {
+                name: data.order.ticket.schedule.flight.Plane.Airline.nama_maskapai,
+                code: data.order.ticket.schedule.flight.Plane.kode_pesawat,
+                model: data.order.ticket.schedule.flight.Plane.model_pesawat,
+                logo: data.order.ticket.schedule.flight.Plane.Airline.logo_maskapai
+            }
+        };
+
+        return res.render("ticket", { data: dataTest });
+    } catch (error) {
+        next(error);
     }
-
-    return res.render("ticket", { data: dataTest });
-
 };
 
 module.exports = {

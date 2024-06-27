@@ -49,6 +49,7 @@ const createOrder = async (req, res, next) => {
         });
 
         const tanggal_waktu = new Date();
+        const berlaku_sampai = new Date(tanggal_waktu.getTime() + 60 * 60 * 1000);
 
         const orderItems = orders.map((order, index) => ({
             nama: order.nama,
@@ -133,6 +134,7 @@ const createOrder = async (req, res, next) => {
             data: {
                 total: preTax,
                 tanggal_waktu,
+                berlaku_sampai,
                 order: {
                     connect: {
                         id: order.id
