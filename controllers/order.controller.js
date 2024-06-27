@@ -19,7 +19,7 @@ const createOrder = async (req, res, next) => {
         });
 
         if (!users) {
-            return res.status(401).json({
+            return res.status(404).json({
                 status: false,
                 message: "Users not found"
             });
@@ -200,7 +200,7 @@ const listOrders = async (req, res, next) => {
         });
 
         if (!users) {
-            return res.status(401).json({
+            return res.status(404).json({
                 status: false,
                 message: "Users not found"
             });
@@ -277,7 +277,7 @@ const getOrder = async (req, res, next) => {
         });
 
         if (!users) {
-            return res.status(401).json({
+            return res.status(404).json({
                 status: false,
                 message: "Users not found"
             });
@@ -383,7 +383,7 @@ const updateOrder = async (req, res, next) => {
         });
 
         if (!users) {
-            return res.status(401).json({
+            return res.status(404).json({
                 status: false,
                 message: "Users not found"
             });
@@ -453,7 +453,7 @@ const deleteOrder = async (req, res, next) => {
         });
 
         if (!users) {
-            return res.status(401).json({
+            return res.status(404).json({
                 status: false,
                 message: "Users not found"
             });

@@ -366,8 +366,7 @@ const createTicket = async (req, res, next) => {
         status: true,
         message: "Ticket created successfully"
     });
-
-}
+};
 
 module.exports = {
     getAllTickets,

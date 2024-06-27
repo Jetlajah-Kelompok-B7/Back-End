@@ -20,7 +20,7 @@ const listCheckouts = async (req, res, next) => {
         });
 
         if (!users) {
-            return res.status(401).json({
+            return res.status(404).json({
                 status: false,
                 message: "Users not found"
             });
@@ -71,7 +71,7 @@ const getCheckout = async (req, res, next) => {
         });
 
         if (!users) {
-            return res.status(401).json({
+            return res.status(404).json({
                 status: false,
                 message: "Users not found"
             });
@@ -142,6 +142,7 @@ const getCheckout = async (req, res, next) => {
             total: checkout.total,
             tax: tax,
             tanggal_waktu: checkout.tanggal_waktu,
+            berlaku_sampai: checkout.berlaku_sampai,
             status: checkout.status,
             orderId: checkout.orderId,
             bandara_keberangkatan: {
@@ -205,7 +206,7 @@ const confirmCheckout = async (req, res, next) => {
         });
 
         if (!users) {
-            return res.status(401).json({
+            return res.status(404).json({
                 status: false,
                 message: "Users not found"
             });
@@ -234,7 +235,7 @@ const confirmCheckout = async (req, res, next) => {
                 }
             });
 
-            return res.status(401).json({
+            return res.status(403).json({
                 status: false,
                 message: "The order has expired."
             });
@@ -317,7 +318,7 @@ const printCheckout = async (req, res, next) => {
         });
 
         if (!users) {
-            return res.status(401).json({
+            return res.status(404).json({
                 status: false,
                 message: "Users not found"
             });
