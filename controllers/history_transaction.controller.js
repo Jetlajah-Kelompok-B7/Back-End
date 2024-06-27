@@ -17,7 +17,7 @@ const listHistoryTransactions = async (req, res, next) => {
         });
 
         if (!users) {
-            return res.status(401).json({
+            return res.status(404).json({
                 status: false,
                 message: "Users not found"
             });
@@ -149,7 +149,7 @@ const getHistoryTransaction = async (req, res, next) => {
         });
 
         if (!users) {
-            return res.status(401).json({
+            return res.status(404).json({
                 status: false,
                 message: "Users not found"
             });
@@ -231,7 +231,7 @@ const getHistoryTransaction = async (req, res, next) => {
         const data = {
             price: {
                 total: checkout.total,
-                tax: tax,
+                tax: tax
             },
             booking_code: hashIdOrder,
             ...historyTransaction

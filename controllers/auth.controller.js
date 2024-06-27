@@ -24,7 +24,7 @@ const register = async (req, res, next) => {
         const exist = await prisma.user.findFirst({ where: { email: email } });
 
         if (exist) {
-            return res.status(401).json({
+            return res.status(403).json({
                 status: false,
                 message: "Email has already been used"
             });

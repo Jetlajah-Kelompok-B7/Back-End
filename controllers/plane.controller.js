@@ -18,7 +18,7 @@ const getAllPlane = async (req, res, next) => {
                 kode: plane.Airline.kode_maskapai,
                 logo: plane.Airline.logo_maskapai
             }
-        }))
+        }));
 
         return res.status(200).json({
             status: true,
