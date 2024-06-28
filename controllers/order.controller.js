@@ -52,7 +52,7 @@ const createOrder = async (req, res, next) => {
         const berlaku_sampai = new Date(tanggal_waktu.getTime() + 60 * 60 * 1000);
 
         const orderItems = orders.map((order, index) => ({
-            nama: order.nama,
+            nama: order?.titel ? order.titel + " " + order.nama : order.nama,
             tanggal_lahir: order.tanggal_lahir,
             kewarganegaraan: order.kewarganegaraan,
             ktp_pasport: order.ktp_pasport,
