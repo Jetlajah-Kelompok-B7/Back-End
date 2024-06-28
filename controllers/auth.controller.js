@@ -594,9 +594,19 @@ const requestResetPassword = async (req, res, next) => {
  */
 const googleOAuth2 = async (req, res, next) => {
     try {
+        const users = await prisma.user.findUnique({
+            where: {
+                id: req.user.id
+            }
+        });
+
         const token = jwt.sign({ id: req.user.id }, process.env.JWT_SECRET);
 
         res.cookie("token", token, { httpOnly: true });
+
+        if (!users) {
+            return res.redirect(`${process.env.REDIRECT_URL}/add-pin`);
+        }
 
         return res.redirect(`${process.env.REDIRECT_URL}`);
     } catch (error) {
