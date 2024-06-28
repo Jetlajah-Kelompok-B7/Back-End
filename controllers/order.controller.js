@@ -62,6 +62,8 @@ const createOrder = async (req, res, next) => {
             no_kursi: (lastOrder ? lastOrder.no_kursi : 0) + index + 1
         }));
 
+        const babyCount = orderItems.filter((order) => order.is_baby).length;
+
         if (orderItems.length > ticket.jumlah) {
             return res.status(400).json({
                 status: false,
@@ -111,7 +113,7 @@ const createOrder = async (req, res, next) => {
             }
         });
 
-        const total = order.Orders.length * order.ticket.harga;
+        const total = (order.Orders.length - babyCount) * order.ticket.harga;
         const preTax = total + (total / 100 * 10);
 
         const net = preTax / (1 + 10 / 100);
