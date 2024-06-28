@@ -145,7 +145,10 @@ const createOrder = async (req, res, next) => {
 
         const checkout = await prisma.checkout.findUnique({
             where: {
-                id: newCheckout.id
+                id: newCheckout.id,
+                order: {
+                    userId: users.id
+                }
             },
             select: {
                 id: true,
@@ -165,10 +168,10 @@ const createOrder = async (req, res, next) => {
         });
 
         const hashIdOrder = crypto.createHash("sha256").update(order.id.toString()).digest("hex").slice(0, 7);
-
         const data = {
-            ...checkout,
             ...order,
+            checkoutId: checkout.id,
+            is_payment: checkout.is_payment,
             booking_code: hashIdOrder,
             price: {
                 price: checkout.total,
