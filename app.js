@@ -33,8 +33,8 @@ app.use((req, res, next) => {
     res.status(404).json({ err: `Cannot ${req.method} ${req.url}` });
 });
 
-app.listen(port, () => {
-    console.log(`running on port ${port}`);
+app.listen(port, "0.0.0.0", () => {
+    console.info(`running on port ${port}`);
 });
 
 module.exports = app;
