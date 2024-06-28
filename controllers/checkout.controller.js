@@ -411,19 +411,6 @@ const printView = async (req, res, next) => {
             });
         }
 
-        const users = await prisma.user.findUnique({
-            where: {
-                id: req.user.id
-            }
-        });
-
-        if (!users) {
-            res.status(404).json({
-                status: false,
-                message: "User not found"
-            });
-        }
-
         const data = await prisma.checkout.findUnique({
             include: {
                 order: {
