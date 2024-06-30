@@ -128,7 +128,9 @@ const getCheckout = async (req, res, next) => {
 
         const hashIdOrder = crypto.createHash("sha256").update(order.id.toString()).digest("hex").slice(0, 7);
 
-        const total = checkout.order.Orders.length * checkout.order.ticket.harga;
+        const babyCount = checkout.order.Orders.filter((order) => order.is_baby).length;
+
+        const total = (checkout.order.Orders.length - babyCount) * checkout.order.ticket.harga;
         const preTax = total + (total / 100 * 10);
 
         const net = preTax / (1 + 10 / 100);
