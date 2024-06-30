@@ -147,6 +147,7 @@ const getCheckout = async (req, res, next) => {
             berlaku_sampai: checkout.berlaku_sampai,
             status: checkout.status,
             orderId: checkout.orderId,
+            history_transactionId: checkout?.History_Transaction?.id,
             bandara_keberangkatan: {
                 ...checkout.order.ticket.schedule.flight.bandara_keberangkatan,
                 terminal_kedatangan: checkout.order.ticket.schedule.flight.terminal_kedatangan
