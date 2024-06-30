@@ -218,7 +218,9 @@ const getHistoryTransaction = async (req, res, next) => {
 
         const checkout = historyTransaction.checkout;
 
-        const total = checkout.order.Orders.length * checkout.order.ticket.harga;
+        const babyCount = checkout.order.Orders.filter((order) => order.is_baby).length;
+
+        const total = (checkout.order.Orders.length - babyCount) * checkout.order.ticket.harga;
         const preTax = total + (total / 100 * 10);
 
         const net = preTax / (1 + 10 / 100);
