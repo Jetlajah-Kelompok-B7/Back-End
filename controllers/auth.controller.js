@@ -64,7 +64,7 @@ const register = async (req, res, next) => {
                 <div style="font-family: Arial, sans-serif; color: #333;">
                 <h2>Email Verification</h2>
                 <p>Please verify your email address by clicking the link below:</p>
-                <a href="${req.protocol}://${req.get("host")}/api/verif-email?token=${token}" style="color: #1a73e8;">Verify Email</a>
+                <a href="${req.protocol}://${req.get("host")}/api/verify-email?token=${token}" style="color: #1a73e8;">Verify Email</a>
                 <br/><br/>
                 <p>If you did not request this, please ignore this email.</p>
                 <p>Thank you!</p>
