@@ -10,7 +10,7 @@ const plane = require("./plane.router");
 
 app.get("/", (req, res) => {
     const routes = {};
-    ["history", "user", "checkout", "ticket"].forEach((route) => {
+    ["history", "user", "checkout", "ticket", "order", "airport", "plane"].forEach((route) => {
         routes[route] = `${req.protocol}://${req.get("host")}/api/${route}`;
     });
 
