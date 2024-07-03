@@ -14,6 +14,10 @@ https://jetlajahin.up.railway.app
 https://documenter.getpostman.com/view/36024909/2sA3dvjXae
 ```
 
+## ERD
+
+<a href="https://raw.githubusercontent.com/Jetlajah-Kelompok-B7/.github/main/img/erd.png"><img src="https://raw.githubusercontent.com/Jetlajah-Kelompok-B7/.github/main/img/erd.png" width="720px"></a>
+
 ## Back-End Member
 
 - <a href="https://github.com/rizqi-r">Balya Aqila Rizqi Rabbi</a>
