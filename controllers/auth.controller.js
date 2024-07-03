@@ -127,7 +127,7 @@ const login = async (req, res, next) => {
         const token = jwt.sign(user, process.env.JWT_SECRET);
 
         res.cookie("token", token, { httpOnly: true });
-        return res.redirect(`${req.get("origin")}`);
+        return res.redirect(`${process.env.REDIRECT_URL}`);
     } catch (error) {
         next(error);
     }
@@ -523,10 +523,7 @@ const resetPassword = async (req, res, next) => {
                 }
             });
 
-            return res.status(200).json({
-                status: true,
-                message: "Success"
-            });
+            return res.redirect(`${process.env.REDIRECT_URL}`);
         });
     } catch (error) {
         next(error);
