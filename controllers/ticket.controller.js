@@ -369,8 +369,38 @@ const createTicket = async (req, res, next) => {
 
 }
 
+// delete ticket
+const deleteTicket = async (req, res, next) => {
+    const { id } = req.params;
+
+    const ticket = await prisma.ticket.findUnique({
+        where: {
+            id: parseInt(id)
+        }
+    });
+
+    if (!ticket) {
+        return res.status(404).json({
+            status: false,
+            message: "Ticket not found"
+        });
+    }
+
+    await prisma.ticket.delete({
+        where: {
+            id: parseInt(id)
+        }
+    });
+
+    return res.status(200).json({
+        status: true,
+        message: "Ticket deleted successfully"
+    });
+}
+
 module.exports = {
     getAllTickets,
     getTicketById,
-    createTicket
+    createTicket,
+    deleteTicket
 };
