@@ -215,7 +215,7 @@ const confirmCheckout = async (req, res, next) => {
             });
         }
 
-        const expired = await prisma.checkout.findUnique({
+        const checkout = await prisma.checkout.findUnique({
             where: {
                 id: checkoutId
             }
@@ -223,7 +223,7 @@ const confirmCheckout = async (req, res, next) => {
 
         const tanggal_waktu = new Date();
 
-        if (expired.berlaku_sampai < tanggal_waktu) {
+        if (checkout.berlaku_sampai < tanggal_waktu) {
             await prisma.checkout.update({
                 data: {
                     tanggal_waktu,
@@ -241,6 +241,13 @@ const confirmCheckout = async (req, res, next) => {
             return res.status(403).json({
                 status: false,
                 message: "The order has expired."
+            });
+        }
+
+        if (checkout.is_payment === true) {
+            return res.status(401).json({
+                status: false,
+                message: "The order has issued"
             });
         }
 
